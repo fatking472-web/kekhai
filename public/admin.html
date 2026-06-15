@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin - Ke khai bao hiem</title>
+  <title>Quản trị - Kê khai bảo hiểm</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -12,27 +12,27 @@
       <span class="brand-mark">BH</span>
       <span>
         <strong>Admin dashboard</strong>
-        <small>Quan ly nguoi dung dang ky</small>
+        <small>Quản lý người dùng đăng ký</small>
       </span>
     </a>
     <nav class="nav">
-      <a href="/">Trang dang ky</a>
-      <button id="adminLogout" class="ghost-button hidden" type="button">Dang xuat</button>
+      <a href="/">Trang đăng ký</a>
+      <button id="adminLogout" class="ghost-button hidden" type="button">Đăng xuất</button>
     </nav>
   </header>
 
   <main class="shell">
     <section id="adminLogin" class="admin-login">
       <form id="adminLoginForm" class="form-card compact">
-        <p class="eyebrow">Khu vuc quan tri</p>
-        <h1>Dang nhap admin</h1>
-        <label>Tai khoan admin
+        <p class="eyebrow">Khu vực quản trị</p>
+        <h1>Đăng nhập admin</h1>
+        <label>Tài khoản admin
           <input name="email" autocomplete="username" required>
         </label>
-        <label>Mat khau
+        <label>Mật khẩu
           <input name="password" type="password" autocomplete="current-password" required>
         </label>
-        <button class="primary-button" type="submit">Vao dashboard</button>
+        <button class="primary-button" type="submit">Vào trang quản lý</button>
         <p id="adminMessage" class="message" role="status"></p>
       </form>
     </section>
@@ -40,52 +40,73 @@
     <section id="dashboard" class="dashboard hidden">
       <div class="dashboard-heading">
         <div>
-          <p class="eyebrow">Tong quan</p>
-          <h1>Dashboard dang ky</h1>
+          <p class="eyebrow">Tổng quan</p>
+          <h1>Quản lý người dùng</h1>
         </div>
-        <a class="primary-button export-button" href="/api/admin/export.xls">Xuat Excel</a>
+        <div class="dashboard-actions">
+          <input id="searchInput" class="search-input" type="search" placeholder="Tìm theo tên, email, điện thoại, mã BHXH...">
+          <button id="refreshButton" class="ghost-button" type="button">Tải lại</button>
+          <a class="primary-button export-button" href="/api/admin/export.xls">Xuất Excel</a>
+        </div>
       </div>
 
       <div class="stats-grid">
         <article class="stat-card">
-          <span>Tong tai khoan</span>
+          <span>Tổng tài khoản</span>
           <strong id="totalUsers">0</strong>
         </article>
         <article class="stat-card">
-          <span>Dang ky hom nay</span>
+          <span>Đăng ký hôm nay</span>
           <strong id="registeredToday">0</strong>
         </article>
         <article class="stat-card">
-          <span>7 ngay gan nhat</span>
+          <span>7 ngày gần nhất</span>
           <strong id="registeredLast7Days">0</strong>
         </article>
         <article class="stat-card">
-          <span>Da tung dang nhap</span>
+          <span>Đã từng đăng nhập</span>
           <strong id="usersLoggedIn">0</strong>
         </article>
       </div>
 
-      <div class="table-card">
-        <div class="table-header">
-          <h2>Danh sach nguoi dung</h2>
-          <button id="refreshButton" class="ghost-button" type="button">Tai lai</button>
+      <section class="admin-user-manager" aria-label="Quản lý người dùng đăng ký">
+        <div class="table-card users-panel">
+          <div class="table-header">
+            <div>
+              <p class="eyebrow">Danh sách</p>
+              <h2>Người dùng đăng ký</h2>
+            </div>
+            <div class="table-tools">
+              <select id="userSelect" class="user-select" aria-label="Chọn người dùng để xem chi tiết">
+                <option value="">Chọn người dùng...</option>
+              </select>
+              <span id="resultCount" class="result-count">0 người dùng</span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="users-table">
+              <thead>
+                <tr>
+                  <th>Người đăng ký</th>
+                  <th>Liên hệ</th>
+                  <th>Mã hồ sơ</th>
+                  <th>Địa chỉ</th>
+                  <th>Ảnh</th>
+                  <th>Ngày gửi</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="usersBody"></tbody>
+            </table>
+          </div>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Ho va ten</th>
-                <th>Email</th>
-                <th>Dien thoai</th>
-                <th>Ma BHXH</th>
-                <th>CCCD/CMND</th>
-                <th>Ngay dang ky</th>
-              </tr>
-            </thead>
-            <tbody id="usersBody"></tbody>
-          </table>
-        </div>
-      </div>
+
+        <aside id="userDetail" class="table-card user-detail-panel" aria-live="polite">
+          <p class="eyebrow">Chi tiết</p>
+          <h2>Chọn một người dùng để xem đầy đủ thông tin</h2>
+          <p class="empty-detail">Thông tin đăng ký, địa chỉ, ngân hàng và ảnh tải lên sẽ hiển thị tại đây.</p>
+        </aside>
+      </section>
     </section>
   </main>
 

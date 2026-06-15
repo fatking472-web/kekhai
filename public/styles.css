@@ -80,7 +80,8 @@ dd,
 }
 
 .nav a,
-.ghost-button {
+.ghost-button,
+.danger-button {
   border: 1px solid var(--line);
   background: #fff;
   color: var(--text);
@@ -89,6 +90,16 @@ dd,
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+}
+
+.danger-button {
+  border-color: #fecaca;
+  color: #b42318;
+}
+
+.danger-button:hover {
+  background: #fff1f2;
+  border-color: #fda4af;
 }
 
 .shell {
@@ -235,6 +246,21 @@ input:focus {
   border-color: var(--primary);
 }
 
+select {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--text);
+  font: inherit;
+  background: #fff;
+}
+
+select:focus {
+  outline: 3px solid var(--focus);
+  border-color: var(--primary);
+}
+
 .two-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -314,6 +340,18 @@ dd {
   min-width: 128px;
 }
 
+.dashboard-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  width: min(420px, 48vw);
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -336,6 +374,44 @@ dd {
   font-size: 20px;
 }
 
+.table-card h3 {
+  margin: 22px 0 10px;
+  font-size: 15px;
+}
+
+.admin-user-manager {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(360px, 0.8fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.users-panel,
+.user-detail-panel {
+  min-width: 0;
+}
+
+.table-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.user-select {
+  width: min(320px, 38vw);
+}
+
+.result-count,
+.muted-value,
+.user-cell small,
+.users-table td small,
+.detail-head p,
+.empty-detail {
+  color: var(--muted);
+}
+
 .table-wrap {
   overflow-x: auto;
 }
@@ -344,6 +420,10 @@ table {
   width: 100%;
   min-width: 840px;
   border-collapse: collapse;
+}
+
+.users-table {
+  min-width: 980px;
 }
 
 th,
@@ -361,6 +441,148 @@ th {
   background: #f7f9fc;
 }
 
+.users-table td {
+  font-size: 14px;
+}
+
+.users-table td strong,
+.users-table td small {
+  display: block;
+}
+
+.selected-row {
+  background: #f0fdfa;
+}
+
+.users-table tbody tr {
+  cursor: pointer;
+}
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 190px;
+}
+
+.user-avatar {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #dff5f1;
+  color: var(--primary-dark);
+  font-weight: 800;
+}
+
+.upload-count,
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #ecfdf3;
+  color: var(--primary-dark);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.row-action {
+  min-height: 34px;
+  padding: 6px 12px;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.detail-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-head h2 {
+  margin-top: 4px;
+}
+
+.detail-head p {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.detail-item {
+  min-width: 0;
+  padding: 10px 0;
+  border-bottom: 1px solid #eef2f6;
+}
+
+.detail-item span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.detail-item strong {
+  display: block;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.upload-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.upload-card {
+  display: grid;
+  gap: 8px;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.upload-card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f7f9fc;
+}
+
+.upload-card span {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .hidden {
   display: none !important;
 }
@@ -374,8 +596,23 @@ th {
   }
 
   .hero,
-  .auth-grid {
+  .auth-grid,
+  .admin-user-manager {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .table-tools,
+  .user-select {
+    width: 100%;
   }
 
   .stats-grid {
@@ -393,5 +630,101 @@ th {
   .dashboard-heading h1,
   .admin-login h1 {
     font-size: 30px;
+  }
+
+  .detail-grid,
+  .upload-gallery {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .shell {
+    width: calc(100% - 20px);
+    padding: 20px 0 40px;
+  }
+
+  .topbar {
+    padding: 10px 12px;
+    min-height: 56px;
+    gap: 10px;
+  }
+
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .nav a,
+  .ghost-button,
+  .danger-button {
+    font-size: 12px;
+    padding: 6px 10px;
+    min-height: 34px;
+  }
+
+  .stat-card strong {
+    font-size: 26px;
+  }
+
+  .form-card,
+  .profile-card,
+  .table-card {
+    padding: 14px;
+  }
+
+  .table-header {
+    margin-bottom: 12px;
+  }
+
+  .table-card h2 {
+    font-size: 16px;
+  }
+
+  table {
+    min-width: 600px;
+  }
+
+  .users-table {
+    min-width: 700px;
+  }
+
+  th, td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+
+  .detail-head {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .row-actions,
+  .detail-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .row-action {
+    width: 100%;
+    text-align: center;
+  }
+
+  .dashboard-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-actions a,
+  .dashboard-actions button {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .export-button {
+    min-width: 0;
+    width: 100%;
   }
 }

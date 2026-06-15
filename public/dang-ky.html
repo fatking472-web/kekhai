@@ -182,18 +182,70 @@
       });
     }
 
+    function imagePayload(file) {
+      if (!file || !file.name) return Promise.resolve(null);
+      if (!file.type || !file.type.startsWith('image/')) {
+        return Promise.reject(new Error('Vui lòng chỉ tải lên tệp hình ảnh.'));
+      }
+
+      return new Promise(function (resolve, reject) {
+        const reader = new FileReader();
+        reader.onerror = function () {
+          reject(new Error('Không đọc được tệp ảnh.'));
+        };
+        reader.onload = function () {
+          const image = new Image();
+          image.onerror = function () {
+            reject(new Error('Không xử lý được tệp ảnh.'));
+          };
+          image.onload = function () {
+            const maxSide = 1280;
+            const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(image.width * scale));
+            canvas.height = Math.max(1, Math.round(image.height * scale));
+            const context = canvas.getContext('2d');
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            resolve({
+              name: file.name,
+              type: 'image/jpeg',
+              size: file.size,
+              dataUrl: canvas.toDataURL('image/jpeg', 0.78)
+            });
+          };
+          image.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
     function payloadFromForm() {
-      const payload = Object.fromEntries(new FormData(form).entries());
+      const formData = new FormData(form);
+      formData.delete('portrait');
+      formData.delete('frontDoc');
+      formData.delete('backDoc');
+      const payload = Object.fromEntries(formData.entries());
       payload.accountType = sessionStorage.getItem('accountType') || 'caNhan';
       payload.citizenId = payload.documentNumber;
       payload.password = payload.documentNumber || '123456';
-      return payload;
+      return Promise.all([
+        imagePayload(form.portrait.files[0]),
+        imagePayload(form.frontDoc.files[0]),
+        imagePayload(form.backDoc.files[0])
+      ]).then(function (uploads) {
+        payload.portrait = uploads[0];
+        payload.frontDoc = uploads[1];
+        payload.backDoc = uploads[2];
+        return payload;
+      });
     }
 
     form.addEventListener('submit', function (event) {
       event.preventDefault();
       setMessage('Đang gửi thông tin đăng ký...');
-      requestJson('/api/register', payloadFromForm()).then(function () {
+      payloadFromForm().then(function (payload) {
+        return requestJson('/api/register', payload);
+      }).then(function () {
         setMessage('Đăng ký thành công. Bạn có thể đăng nhập bằng Mã số BHXH và Số giấy tờ.', 'success');
       }).catch(function (error) {
         setMessage(error.message, 'error');

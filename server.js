@@ -11,6 +11,7 @@ const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 const SESSION_COOKIE = 'kb_session';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const MAX_BODY_BYTES = 16 * 1024 * 1024;
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin12345';
@@ -68,11 +69,14 @@ function verifyPassword(password, user) {
 function safeUser(user) {
   return {
     id: user.id,
+    insuranceType: user.insuranceType || '',
+    employeeId: user.employeeId || '',
     fullName: user.fullName,
     email: user.email,
     phone: user.phone,
     insuranceCode: user.insuranceCode,
     citizenId: user.citizenId,
+    issueDate: user.issueDate || '',
     accountType: user.accountType || '',
     documentType: user.documentType || '',
     documentNumber: user.documentNumber || user.citizenId,
@@ -86,9 +90,31 @@ function safeUser(user) {
     bankBranch: user.bankBranch || '',
     transactionPlace: user.transactionPlace || '',
     submissionMethod: user.submissionMethod || '',
+    attachments: {
+      portrait: user.attachments?.portrait || user.portrait || null,
+      frontDoc: user.attachments?.frontDoc || user.frontDoc || null,
+      backDoc: user.attachments?.backDoc || user.backDoc || null
+    },
     role: user.role,
     createdAt: user.createdAt,
     lastLoginAt: user.lastLoginAt || null
+  };
+}
+
+function normalizeImageUpload(value) {
+  if (!value) return null;
+
+  const upload = typeof value === 'string' ? { dataUrl: value } : value;
+  if (!upload || typeof upload !== 'object') return null;
+
+  const dataUrl = String(upload.dataUrl || '').trim();
+  if (!/^data:image\/(png|jpe?g|webp);base64,/i.test(dataUrl)) return null;
+
+  return {
+    name: String(upload.name || '').trim(),
+    type: String(upload.type || '').trim(),
+    size: Number(upload.size || 0),
+    dataUrl
   };
 }
 
@@ -169,7 +195,7 @@ function readBody(req) {
     let body = '';
     req.on('data', (chunk) => {
       body += chunk;
-      if (body.length > 1024 * 1024) {
+      if (body.length > MAX_BODY_BYTES) {
         reject(new Error('Payload too large'));
         req.destroy();
       }
@@ -192,7 +218,7 @@ function normalizeEmail(value) {
 function requireAdmin(req, res) {
   const session = getSession(req);
   if (!session || session.role !== 'admin') {
-    sendError(res, 401, 'Ban can dang nhap admin');
+    sendError(res, 401, 'Bạn cần đăng nhập admin');
     return null;
   }
   return session;
@@ -239,11 +265,14 @@ function exportUsersXls(res, users) {
     .map((user, index) => `
       <tr>
         <td>${index + 1}</td>
+        <td>${escapeHtml(user.insuranceType || '')}</td>
+        <td>${escapeHtml(user.employeeId || '')}</td>
         <td>${escapeHtml(user.fullName)}</td>
         <td>${escapeHtml(user.email)}</td>
         <td>${escapeHtml(user.phone)}</td>
         <td>${escapeHtml(user.insuranceCode)}</td>
         <td>${escapeHtml(user.citizenId)}</td>
+        <td>${escapeHtml(user.issueDate || '')}</td>
         <td>${escapeHtml(user.documentType || '')}</td>
         <td>${escapeHtml(user.province || '')}</td>
         <td>${escapeHtml(user.district || '')}</td>
@@ -253,6 +282,9 @@ function exportUsersXls(res, users) {
         <td>${escapeHtml(user.bankAccount || '')}</td>
         <td>${escapeHtml(user.bankName || '')}</td>
         <td>${escapeHtml(user.bankBranch || '')}</td>
+        <td>${user.attachments?.portrait ? 'Có' : 'Không'}</td>
+        <td>${user.attachments?.frontDoc ? 'Có' : 'Không'}</td>
+        <td>${user.attachments?.backDoc ? 'Có' : 'Không'}</td>
         <td>${escapeHtml(user.createdAt)}</td>
         <td>${escapeHtml(user.lastLoginAt || '')}</td>
       </tr>`)
@@ -273,22 +305,28 @@ function exportUsersXls(res, users) {
     <thead>
       <tr>
         <th>STT</th>
-        <th>Ho va ten</th>
+        <th>Loại BH</th>
+        <th>Mã NV/SV</th>
+        <th>Họ và tên</th>
         <th>Email</th>
-        <th>So dien thoai</th>
-        <th>Ma so BHXH</th>
-        <th>CCCD/CMND</th>
-        <th>Loai giay to</th>
-        <th>Tinh/Thanh pho</th>
-        <th>Quan/Huyen</th>
-        <th>Phuong/Xa</th>
-        <th>Dia chi</th>
-        <th>Chu tai khoan</th>
-        <th>So tai khoan</th>
-        <th>Ten ngan hang</th>
-        <th>Chi nhanh</th>
-        <th>Ngay dang ky</th>
-        <th>Dang nhap gan nhat</th>
+        <th>Số điện thoại</th>
+        <th>Mã số BHXH</th>
+        <th>Số CCCD/CMND</th>
+        <th>Ngày cấp</th>
+        <th>Loại giấy tờ</th>
+        <th>Tỉnh/Thành phố</th>
+        <th>Quận/Huyện</th>
+        <th>Phường/Xã</th>
+        <th>Địa chỉ</th>
+        <th>Chủ tài khoản</th>
+        <th>Số tài khoản</th>
+        <th>Tên ngân hàng</th>
+        <th>Chi nhánh</th>
+        <th>Ảnh chân dung</th>
+        <th>Ảnh giấy tờ mặt trước</th>
+        <th>Ảnh giấy tờ mặt sau</th>
+        <th>Ngày đăng ký</th>
+        <th>Đăng nhập gần nhất</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
@@ -322,6 +360,9 @@ async function handleApi(req, res, pathname) {
     const insuranceCode = String(body.insuranceCode || '').trim();
     const citizenId = String(body.citizenId || body.documentNumber || '').trim();
     const extraFields = {
+      insuranceType: String(body.insuranceType || '').trim(),
+      employeeId: String(body.employeeId || '').trim(),
+      issueDate: String(body.issueDate || '').trim(),
       accountType: String(body.accountType || '').trim(),
       documentType: String(body.documentType || '').trim(),
       documentNumber: String(body.documentNumber || citizenId).trim(),
@@ -334,15 +375,20 @@ async function handleApi(req, res, pathname) {
       bankName: String(body.bankName || '').trim(),
       bankBranch: String(body.bankBranch || '').trim(),
       transactionPlace: String(body.transactionPlace || '').trim(),
-      submissionMethod: String(body.submissionMethod || '').trim()
+      submissionMethod: String(body.submissionMethod || '').trim(),
+      attachments: {
+        portrait: normalizeImageUpload(body.portrait),
+        frontDoc: normalizeImageUpload(body.frontDoc),
+        backDoc: normalizeImageUpload(body.backDoc)
+      }
     };
 
-    if (!fullName) return sendError(res, 400, 'Vui long nhap ho va ten');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return sendError(res, 400, 'Email khong hop le');
-    if (password.length < 6) return sendError(res, 400, 'Mat khau toi thieu 6 ky tu');
+    if (!fullName) return sendError(res, 400, 'Vui lòng nhập họ và tên');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return sendError(res, 400, 'Email không hợp lệ');
+    if (password.length < 6) return sendError(res, 400, 'Mật khẩu tối thiểu 6 ký tự');
 
     const users = readJson(USERS_FILE, []);
-    if (users.some((user) => user.email === email)) return sendError(res, 409, 'Email da duoc dang ky');
+    if (users.some((user) => user.email === email)) return sendError(res, 409, 'Email đã được đăng ký');
 
     const passwordData = hashPassword(password);
     const user = {
@@ -365,16 +411,23 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, 201, { user: safeUser(user) });
   }
 
+  if (req.method === 'POST' && pathname === '/api/admin/login') {
+    const body = await readBody(req);
+    const username = String(body.username || '').trim();
+    const password = String(body.password || '');
+
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      createSession(res, 'admin', 'admin');
+      return sendJson(res, 200, { user: { username: ADMIN_USERNAME, role: 'admin' } });
+    }
+    return sendError(res, 401, 'Tài khoản hoặc mật khẩu không chính xác');
+  }
+
   if (req.method === 'POST' && pathname === '/api/login') {
     const body = await readBody(req);
     const rawIdentifier = String(body.email || body.username || body.identifier || '').trim();
     const identifier = normalizeEmail(rawIdentifier);
     const password = String(body.password || '');
-
-    if (identifier === normalizeEmail(ADMIN_USERNAME) && password === ADMIN_PASSWORD) {
-      createSession(res, 'admin', 'admin');
-      return sendJson(res, 200, { user: { username: ADMIN_USERNAME, role: 'admin' } });
-    }
 
     const users = readJson(USERS_FILE, []);
     const user = users.find((item) => item.email === identifier || item.insuranceCode === rawIdentifier);
@@ -382,7 +435,7 @@ async function handleApi(req, res, pathname) {
       verifyPassword(password, user) ||
       (user.insuranceCode === rawIdentifier && user.citizenId === password)
     );
-    if (!user || !validPassword) return sendError(res, 401, 'Thong tin dang nhap khong dung');
+    if (!user || !validPassword) return sendError(res, 401, 'Thông tin đăng nhập không đúng');
 
     user.lastLoginAt = nowIso();
     writeJson(USERS_FILE, users);
@@ -402,18 +455,56 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, 200, { users: users.map(safeUser) });
   }
 
+  if (req.method === 'DELETE' && pathname.startsWith('/api/admin/users/')) {
+    if (!requireAdmin(req, res)) return;
+    const userId = pathname.slice('/api/admin/users/'.length);
+    const users = readJson(USERS_FILE, []);
+    const userIndex = users.findIndex((user) => user.id === userId);
+    if (userIndex === -1) return sendError(res, 404, 'Không tìm thấy người dùng');
+
+    const [deletedUser] = users.splice(userIndex, 1);
+    writeJson(USERS_FILE, users);
+
+    const sessions = readJson(SESSIONS_FILE, {});
+    let changedSessions = false;
+    for (const [sessionId, session] of Object.entries(sessions)) {
+      if (session.principalId === deletedUser.id) {
+        delete sessions[sessionId];
+        changedSessions = true;
+      }
+    }
+    if (changedSessions) writeJson(SESSIONS_FILE, sessions);
+
+    return sendJson(res, 200, { ok: true, deletedUser: safeUser(deletedUser) });
+  }
+
   if (req.method === 'GET' && pathname === '/api/admin/export.xls') {
     if (!requireAdmin(req, res)) return;
     const users = readJson(USERS_FILE, []);
     return exportUsersXls(res, users);
   }
 
-  return sendError(res, 404, 'Khong tim thay API');
+  return sendError(res, 404, 'Không tìm thấy API');
 }
 
 function serveStatic(req, res, pathname) {
+  const host = req.headers.host || '';
+  const isHostAdmin = host.startsWith('admin.') || host.includes('localhost') || host.includes('127.0.0.1');
+
+  if (isHostAdmin && pathname === '/') {
+    pathname = '/admin-login.html';
+  }
+
   let filePath = pathname === '/' ? path.join(PUBLIC_DIR, 'index.html') : path.join(PUBLIC_DIR, pathname);
-  if (pathname === '/admin') filePath = path.join(PUBLIC_DIR, 'admin.html');
+  
+  if (pathname === '/admin' || pathname === '/admin.html') {
+    if (!isHostAdmin) {
+      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+      return res.end('Forbidden: Vui lòng truy cập thông qua tên miền quản trị.');
+    }
+    filePath = path.join(PUBLIC_DIR, 'admin.html');
+  }
+
   if (pathname === '/chon-dang-ky') filePath = path.join(PUBLIC_DIR, 'chon-dang-ky.html');
   if (pathname === '/dang-ky') filePath = path.join(PUBLIC_DIR, 'dang-ky.html');
 
@@ -442,7 +533,7 @@ const server = http.createServer(async (req, res) => {
     return serveStatic(req, res, pathname);
   } catch (error) {
     console.error(error);
-    return sendError(res, 500, 'Loi server');
+    return sendError(res, 500, 'Lỗi server');
   }
 });
 
