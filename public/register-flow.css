@@ -10,7 +10,9 @@ body {
 a { color: inherit; text-decoration: none; }
 .site-header {
   height: 100px;
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
   overflow: hidden;
   background-color: #0f8ed8;
   background-image:
