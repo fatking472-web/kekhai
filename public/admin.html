@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin - Ke khai bao hiem</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">
+      <span class="brand-mark">BH</span>
+      <span>
+        <strong>Admin dashboard</strong>
+        <small>Quan ly nguoi dung dang ky</small>
+      </span>
+    </a>
+    <nav class="nav">
+      <a href="/">Trang dang ky</a>
+      <button id="adminLogout" class="ghost-button hidden" type="button">Dang xuat</button>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <section id="adminLogin" class="admin-login">
+      <form id="adminLoginForm" class="form-card compact">
+        <p class="eyebrow">Khu vuc quan tri</p>
+        <h1>Dang nhap admin</h1>
+        <label>Tai khoan admin
+          <input name="email" autocomplete="username" required>
+        </label>
+        <label>Mat khau
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button class="primary-button" type="submit">Vao dashboard</button>
+        <p id="adminMessage" class="message" role="status"></p>
+      </form>
+    </section>
+
+    <section id="dashboard" class="dashboard hidden">
+      <div class="dashboard-heading">
+        <div>
+          <p class="eyebrow">Tong quan</p>
+          <h1>Dashboard dang ky</h1>
+        </div>
+        <a class="primary-button export-button" href="/api/admin/export.xls">Xuat Excel</a>
+      </div>
+
+      <div class="stats-grid">
+        <article class="stat-card">
+          <span>Tong tai khoan</span>
+          <strong id="totalUsers">0</strong>
+        </article>
+        <article class="stat-card">
+          <span>Dang ky hom nay</span>
+          <strong id="registeredToday">0</strong>
+        </article>
+        <article class="stat-card">
+          <span>7 ngay gan nhat</span>
+          <strong id="registeredLast7Days">0</strong>
+        </article>
+        <article class="stat-card">
+          <span>Da tung dang nhap</span>
+          <strong id="usersLoggedIn">0</strong>
+        </article>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <h2>Danh sach nguoi dung</h2>
+          <button id="refreshButton" class="ghost-button" type="button">Tai lai</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ho va ten</th>
+                <th>Email</th>
+                <th>Dien thoai</th>
+                <th>Ma BHXH</th>
+                <th>CCCD/CMND</th>
+                <th>Ngay dang ky</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/admin.js"></script>
+</body>
+</html>

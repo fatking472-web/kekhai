@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Tờ khai đăng ký giao dịch điện tử</title>
+  <link rel="stylesheet" href="/register-flow.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner wide">
+      <a class="logo-link" href="/" aria-label="Bảo hiểm xã hội Việt Nam">
+        <span class="logo-image" aria-hidden="true"></span>
+      </a>
+      <nav class="header-actions" aria-label="Tài khoản">
+        <a href="/">Đăng nhập</a>
+        <a href="/chon-dang-ky">Đăng ký</a>
+      </nav>
+    </div>
+  </header>
+
+  <nav class="menu-bar">
+    <div class="menu-inner wide">
+      <a class="home-icon" href="/" aria-label="Trang chủ"></a>
+      <a href="#">Nộp BHXH điện tử</a>
+      <a href="#">Dịch vụ công</a>
+      <a href="#">Tra cứu</a>
+      <a href="#">Tài liệu & ứng dụng</a>
+    </div>
+  </nav>
+
+  <main class="page">
+    <p class="breadcrumb">Trang chủ &nbsp;&gt;&nbsp; <span>Đăng ký</span></p>
+    <div class="title-strip">Đăng ký</div>
+
+    <div class="step-row">
+      <div class="step disabled">
+        <span class="step-dot">1</span>
+        <span>Loại đối tượng</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step">
+        <span class="step-dot">2</span>
+        <span>Đăng ký</span>
+      </div>
+    </div>
+
+    <section class="declaration-card">
+      <h1>Tờ khai đăng ký giao dịch điện tử</h1>
+      <form id="registerForm">
+        <section class="form-section">
+          <h2>Thông tin đăng ký</h2>
+          <div class="form-grid">
+            <label class="field">Họ tên <span class="req">*</span>
+              <input name="fullName" placeholder="Nhập họ và tên đầy đủ" required>
+            </label>
+            <label class="field">Mã số bảo hiểm xã hội <span class="req">*</span>
+              <input name="insuranceCode" placeholder="Nhập mã số BHXH" required>
+            </label>
+            <label class="field">Loại giấy tờ <span class="req">*</span>
+              <input name="documentType" placeholder="VD: CCCD, CMND, Hộ chiếu..." required>
+            </label>
+            <label class="field">Số giấy tờ <span class="req">*</span>
+              <input name="documentNumber" placeholder="Nhập số giấy tờ" required>
+            </label>
+            <label class="field">Số điện thoại <span class="req">*</span>
+              <input name="phone" placeholder="Nhập số điện thoại" required>
+            </label>
+            <label class="field">Email <span class="req">*</span>
+              <input name="email" type="email" placeholder="Nhập email" required>
+            </label>
+          </div>
+          <div class="form-grid three" style="margin-top: 28px;">
+            <label class="field">Tỉnh/Thành phố <span class="req">*</span>
+              <input name="province" placeholder="Nhập tỉnh/thành phố" required>
+            </label>
+            <label class="field">Quận/Huyện <span class="req">*</span>
+              <input name="district" placeholder="Nhập quận/huyện" required>
+            </label>
+            <label class="field">Phường/Xã <span class="req">*</span>
+              <input name="ward" placeholder="Nhập phường/xã" required>
+            </label>
+            <label class="field full">Địa chỉ <span class="req">*</span>
+              <input name="address" placeholder="Nhập địa chỉ chi tiết" required>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2>Thông tin ngân hàng</h2>
+          <div class="form-grid">
+            <label class="field">Chủ tài khoản <span class="req">*</span>
+              <input name="bankOwner" placeholder="Nhập tên chủ tài khoản" required>
+            </label>
+            <label class="field">Số tài khoản <span class="req">*</span>
+              <input name="bankAccount" placeholder="Nhập số tài khoản ngân hàng" required>
+            </label>
+            <label class="field">Tên ngân hàng <span class="req">*</span>
+              <input name="bankName" placeholder="Nhập tên ngân hàng" required>
+            </label>
+            <label class="field">Chi nhánh <span class="req">*</span>
+              <input name="bankBranch" placeholder="Nhập tên chi nhánh ngân hàng" required>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2>Đăng ký giao dịch tại</h2>
+          <p><strong>Chọn nơi đăng ký giao dịch:</strong></p>
+          <div class="radio-line">
+            <label><input type="radio" name="transactionPlace" value="portal" checked> Cổng thông tin điện tử của BHXH Việt Nam</label>
+            <label><input type="radio" name="transactionPlace" value="ivan"> Tổ chức I-VAN</label>
+          </div>
+          <div class="commitment">
+            <strong>Cam kết:</strong> Cơ quan/tổ chức/cá nhân tôi cam kết hoàn toàn chịu trách nhiệm trước pháp luật về tính chính xác, trung thực của nội dung nêu trên và thực hiện giao dịch điện tử trong lĩnh vực bảo hiểm xã hội theo đúng quy định của pháp luật.
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2>Hình thức nộp hồ sơ</h2>
+          <p><strong>Chọn hình thức:</strong></p>
+          <div class="radio-line">
+            <label><input type="radio" name="submissionMethod" value="office" checked> Tại cơ quan</label>
+            <label><input type="radio" name="submissionMethod" value="home"> Tại nhà</label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2>Tài liệu đính kèm</h2>
+          <div class="upload-grid">
+            <label class="upload-label">Ảnh chân dung <span class="req">*</span>
+              <span class="upload-box"><input name="portrait" type="file" accept="image/*"><span><span class="upload-icon">▣</span><strong>Ảnh chân dung</strong></span></span>
+            </label>
+            <label class="upload-label">Ảnh giấy tờ mặt trước <span class="req">*</span>
+              <span class="upload-box"><input name="frontDoc" type="file" accept="image/*"><span><span class="upload-icon">▣</span><strong>Ảnh giấy tờ mặt trước</strong></span></span>
+            </label>
+            <label class="upload-label">Ảnh giấy tờ mặt sau <span class="req">*</span>
+              <span class="upload-box"><input name="backDoc" type="file" accept="image/*"><span><span class="upload-icon">▣</span><strong>Ảnh giấy tờ mặt sau</strong></span></span>
+            </label>
+          </div>
+        </section>
+
+        <input name="password" type="hidden">
+        <p id="message" class="message" role="status"></p>
+        <div class="form-actions">
+          <button class="btn" type="submit">Đăng ký</button>
+          <button id="resetButton" class="btn gray" type="button">Làm lại</button>
+          <button id="sampleButton" class="btn teal" type="button">Điền dữ liệu mẫu</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>©2014 – 2015 - Bản quyền thuộc về Bảo hiểm xã hội Việt Nam.</span>
+    <small>Khi sử dụng lại thông tin từ website này, xin vui lòng ghi rõ nguồn "Cổng thông tin điện tử BHXH Việt Nam"</small>
+  </footer>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const message = document.getElementById('message');
+    const resetButton = document.getElementById('resetButton');
+    const sampleButton = document.getElementById('sampleButton');
+
+    function setMessage(text, type) {
+      message.textContent = text;
+      message.className = `message ${type || ''}`.trim();
+    }
+
+    function requestJson(url, body) {
+      return fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify(body)
+      }).then(function (response) {
+        return response.json().catch(function () { return {}; }).then(function (data) {
+          if (!response.ok) throw new Error(data.error || 'Có lỗi xảy ra');
+          return data;
+        });
+      });
+    }
+
+    function payloadFromForm() {
+      const payload = Object.fromEntries(new FormData(form).entries());
+      payload.accountType = sessionStorage.getItem('accountType') || 'caNhan';
+      payload.citizenId = payload.documentNumber;
+      payload.password = payload.documentNumber || '123456';
+      return payload;
+    }
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      setMessage('Đang gửi thông tin đăng ký...');
+      requestJson('/api/register', payloadFromForm()).then(function () {
+        setMessage('Đăng ký thành công. Bạn có thể đăng nhập bằng Mã số BHXH và Số giấy tờ.', 'success');
+      }).catch(function (error) {
+        setMessage(error.message, 'error');
+      });
+    });
+
+    resetButton.addEventListener('click', function () {
+      form.reset();
+      setMessage('');
+    });
+
+    sampleButton.addEventListener('click', function () {
+      const stamp = Date.now().toString().slice(-6);
+      form.fullName.value = 'Nguyễn Văn A';
+      form.insuranceCode.value = 'BH' + stamp;
+      form.documentType.value = 'CCCD';
+      form.documentNumber.value = '001' + stamp + '999';
+      form.phone.value = '090' + stamp;
+      form.email.value = 'dangky' + stamp + '@example.com';
+      form.province.value = 'Hà Nội';
+      form.district.value = 'Ba Đình';
+      form.ward.value = 'Phúc Xá';
+      form.address.value = 'Số 1, đường mẫu';
+      form.bankOwner.value = 'Nguyễn Văn A';
+      form.bankAccount.value = '123456' + stamp;
+      form.bankName.value = 'Vietcombank';
+      form.bankBranch.value = 'Hà Nội';
+    });
+  </script>
+</body>
+</html>

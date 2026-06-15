@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Đăng ký - Bảo hiểm xã hội Việt Nam</title>
+  <link rel="stylesheet" href="/register-flow.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner wide">
+      <a class="logo-link" href="/" aria-label="Bảo hiểm xã hội Việt Nam">
+        <span class="logo-image" aria-hidden="true"></span>
+      </a>
+      <nav class="header-actions" aria-label="Tài khoản">
+        <a href="/">Đăng nhập</a>
+        <a href="/chon-dang-ky">Đăng ký</a>
+      </nav>
+    </div>
+  </header>
+
+  <nav class="menu-bar">
+    <div class="menu-inner wide">
+      <a class="home-icon" href="/" aria-label="Trang chủ"></a>
+      <a href="#">Nộp BHXH điện tử</a>
+      <a href="#">Dịch vụ công</a>
+      <a href="#">Tra cứu</a>
+      <a href="#">Tài liệu & ứng dụng</a>
+    </div>
+  </nav>
+
+  <main class="page">
+    <p class="breadcrumb">Trang chủ &nbsp;&gt;&nbsp; <span>Đăng ký</span></p>
+    <div class="title-strip">Đăng ký</div>
+
+    <div class="step-row">
+      <div class="step">
+        <span class="step-dot">1</span>
+        <span>Loại đối tượng</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step disabled">
+        <span class="step-dot">2</span>
+        <span>Đăng ký</span>
+      </div>
+    </div>
+
+    <section class="step-one-content">
+      <div class="type-box">
+        <h2>Đối tượng đăng ký:</h2>
+        <label class="type-option">
+          <input type="radio" name="accountType" value="caNhan">
+          <span>Cá nhân</span>
+        </label>
+        <label class="type-option">
+          <input type="radio" name="accountType" value="toChuc">
+          <span>Cơ quan/Tổ chức</span>
+        </label>
+        <label class="type-option">
+          <input type="radio" name="accountType" value="choCon">
+          <span>Cho con</span>
+        </label>
+      </div>
+      <div class="next-wrap">
+        <button id="nextButton" class="btn" type="button">Tiếp</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>©2014 – 2015 - Bản quyền thuộc về Bảo hiểm xã hội Việt Nam.</span>
+    <small>Khi sử dụng lại thông tin từ website này, xin vui lòng ghi rõ nguồn "Cổng thông tin điện tử BHXH Việt Nam"</small>
+  </footer>
+
+  <script>
+    document.getElementById('nextButton').addEventListener('click', function () {
+      const checked = document.querySelector('input[name="accountType"]:checked');
+      if (!checked) {
+        alert('Vui lòng chọn đối tượng đăng ký');
+        return;
+      }
+      sessionStorage.setItem('accountType', checked.value);
+      window.location.href = '/dang-ky';
+    });
+  </script>
+</body>
+</html>

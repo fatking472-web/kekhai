@@ -1,0 +1,13 @@
+{
+  "name": "kekhaibaohiem",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Website dang ky, dang nhap va dashboard admin cho ke khai bao hiem.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
