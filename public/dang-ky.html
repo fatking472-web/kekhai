@@ -58,6 +58,10 @@
             <label class="field">Mã số bảo hiểm xã hội <span class="req">*</span>
               <input name="insuranceCode" placeholder="Nhập mã số BHXH" required>
             </label>
+            <label class="field">Loại giấy tờ <span class="req">*</span>
+              <input name="documentType" placeholder="VD: CCCD, Hộ chiếu..." required>
+            </label>
+
 
             <label class="field">Số điện thoại <span class="req">*</span>
               <input name="phone" placeholder="Nhập số điện thoại" required>
@@ -244,6 +248,8 @@
       const stamp = Date.now().toString().slice(-6);
       form.fullName.value = 'Nguyễn Văn A';
       form.insuranceCode.value = 'BH' + stamp;
+      form.documentType.value = 'CCCD';
+
       form.phone.value = '090' + stamp;
       form.email.value = 'dangky' + stamp + '@example.com';
       form.province.value = 'Hà Nội';
