@@ -4,175 +4,906 @@
   <meta charset="utf-8">
   <title>Đăng Nhập Quản Trị - BHXH</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #0f8ed8;
+      --primary-dark: #0970b0;
+      --primary-deeper: #075a90;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --bg: #0b1528;
+      --bg2: #0f1f38;
+      --card: rgba(255,255,255,0.04);
+      --card-border: rgba(255,255,255,0.1);
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --input-bg: rgba(255,255,255,0.06);
+      --input-border: rgba(255,255,255,0.12);
+      --input-focus: var(--primary);
+    }
+
     body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #eef2f7;
+      font-family: 'Inter', Arial, sans-serif;
+      background: var(--bg);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
     }
 
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(15,142,216,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 90%, rgba(16,185,129,0.10) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 60% 40%, rgba(15,142,216,0.06) 0%, transparent 60%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Floating orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      pointer-events: none;
+      animation: floatOrb 12s ease-in-out infinite;
+    }
+    .orb-1 { width: 400px; height: 400px; background: var(--primary); top: -100px; left: -100px; animation-delay: 0s; }
+    .orb-2 { width: 300px; height: 300px; background: #6366f1; bottom: -80px; right: -80px; animation-delay: -5s; }
+    .orb-3 { width: 200px; height: 200px; background: var(--success); bottom: 30%; left: 10%; animation-delay: -9s; }
+
+    @keyframes floatOrb {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(20px, -20px) scale(1.05); }
+      66% { transform: translate(-15px, 15px) scale(0.95); }
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
       width: 100%;
-      max-width: 420px;
-      padding: clamp(20px, 6vw, 40px);
+      max-width: 440px;
     }
 
-    .logo-strip {
+    /* Header above card */
+    .site-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .site-header img {
+      height: 48px;
+      filter: brightness(1.1);
+    }
+
+    /* Card */
+    .card {
+      background: rgba(15, 31, 56, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04) inset;
+    }
+
+    /* ─── Step indicator ─── */
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 28px;
+    }
+    .step-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.35s ease;
+      position: relative;
+      z-index: 1;
+    }
+    .step-dot.active {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 0 0 4px rgba(15,142,216,0.25);
+    }
+    .step-dot.done {
+      border-color: var(--success);
+      background: var(--success);
+      color: #fff;
+    }
+    .step-dot.done::after { content: '✓'; font-size: 13px; }
+    .step-dot.done .step-num { display: none; }
+    .step-line {
+      height: 2px;
+      width: 48px;
+      background: var(--input-border);
+      transition: background 0.35s ease;
+    }
+    .step-line.done { background: var(--success); }
+
+    /* ─── Screen sections ─── */
+    .screen { display: none; animation: fadeSlide 0.35s ease; }
+    .screen.active { display: block; }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── Typography ─── */
+    .screen-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      text-align: center;
+      margin-bottom: 4px;
+      letter-spacing: -0.3px;
+    }
+    .screen-sub {
+      font-size: 13px;
+      color: var(--text-muted);
       text-align: center;
       margin-bottom: 24px;
+      line-height: 1.55;
     }
 
-    .logo-strip img {
-      max-width: 80%;
-      height: auto;
-      max-height: 60px;
-    }
-
-    h1 {
-      margin: 0 0 6px;
-      text-align: center;
-      color: #0f8ed8;
-      font-size: clamp(18px, 5vw, 22px);
-    }
-
-    .sub {
-      text-align: center;
-      color: #888;
-      font-size: 13px;
-      margin: 0 0 24px;
-    }
-
-    .form-group {
-      margin-bottom: 16px;
-    }
+    /* ─── Form elements ─── */
+    .form-group { margin-bottom: 16px; }
 
     label {
       display: block;
-      margin-bottom: 6px;
-      color: #333;
-      font-weight: 700;
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 7px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
     }
 
-    input {
+    input[type="text"],
+    input[type="password"],
+    input[type="tel"] {
       width: 100%;
-      padding: 11px 14px;
-      border: 1px solid #d0d7e0;
-      border-radius: 8px;
+      padding: 12px 14px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 10px;
       font-size: 15px;
       font-family: inherit;
-      background: #fafbfc;
-      transition: border-color 0.2s;
+      color: var(--text);
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
     }
-
+    input::placeholder { color: #4a5568; }
     input:focus {
       outline: none;
-      border-color: #0f8ed8;
-      background: #fff;
-      box-shadow: 0 0 0 3px rgba(15,142,216,0.12);
+      border-color: var(--primary);
+      background: rgba(15,142,216,0.08);
+      box-shadow: 0 0 0 3px rgba(15,142,216,0.18);
     }
 
-    .btn-login {
+    /* OTP big input */
+    .otp-input {
+      width: 100%;
+      padding: 16px 14px;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 10px;
+      text-align: center;
+      background: var(--input-bg);
+      border: 2px solid var(--input-border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .otp-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: rgba(15,142,216,0.08);
+      box-shadow: 0 0 0 4px rgba(15,142,216,0.18);
+    }
+
+    /* ─── Buttons ─── */
+    .btn {
       display: block;
       width: 100%;
       padding: 13px;
-      background: #0f8ed8;
-      color: #fff;
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
+      border-radius: 10px;
+      font-size: 15px;
       font-weight: 700;
+      font-family: inherit;
       cursor: pointer;
-      margin-top: 6px;
-      transition: background 0.2s;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background 0.15s;
+    }
+    .btn:hover::after { background: rgba(255,255,255,0.07); }
+    .btn:active { transform: scale(0.99); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(15,142,216,0.35);
+    }
+    .btn-primary:hover { box-shadow: 0 6px 20px rgba(15,142,216,0.45); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--input-border);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(239,68,68,0.3);
     }
 
-    .btn-login:hover { background: #0b70ab; }
-    .btn-login:active { background: #095c8f; }
-
-    .error-msg {
-      color: #d32f2f;
-      background: #fff3f3;
-      border: 1px solid #fca5a5;
-      border-radius: 6px;
-      padding: 10px 14px;
-      font-size: 14px;
-      margin-bottom: 14px;
+    /* Loading spinner inside button */
+    .btn .spinner {
       display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+    .btn.loading .spinner { display: block; }
+    .btn.loading .btn-text { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Alert messages ─── */
+    .alert {
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 13.5px;
+      margin-bottom: 16px;
+      display: none;
+      line-height: 1.5;
+    }
+    .alert.show { display: block; }
+    .alert-error {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5;
+    }
+    .alert-warning {
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.3);
+      color: #fcd34d;
+    }
+    .alert-success {
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.3);
+      color: #6ee7b7;
+    }
+    .alert-info {
+      background: rgba(15,142,216,0.1);
+      border: 1px solid rgba(15,142,216,0.3);
+      color: #7dd3fc;
     }
 
-    .back-link {
-      display: block;
-      text-align: center;
-      margin-top: 20px;
-      color: #0f8ed8;
-      font-size: 13px;
-      text-decoration: underline;
+    /* ─── QR Code area ─── */
+    .qr-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
     }
+    .qr-box {
+      background: #fff;
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 0 0 6px rgba(15,142,216,0.15);
+    }
+    .qr-box img { display: block; width: 180px; height: 180px; }
+
+    .secret-box {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px dashed var(--input-border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .secret-code {
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      letter-spacing: 2px;
+      color: var(--primary);
+      word-break: break-all;
+      flex: 1;
+    }
+    .copy-btn {
+      background: none;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 12px;
+      padding: 4px 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+    /* ─── Emergency code display ─── */
+    .emergency-banner {
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .emergency-banner .em-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fcd34d;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .emergency-banner .em-code {
+      font-family: 'Courier New', monospace;
+      font-size: 15px;
+      letter-spacing: 3px;
+      color: #fde68a;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+      word-break: break-all;
+    }
+    .emergency-banner .em-desc {
+      font-size: 12px;
+      color: #a78052;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    /* ─── Reset 2FA link ─── */
+    .link-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12.5px;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0;
+      transition: color 0.2s;
+    }
+    .link-btn:hover { color: var(--primary); }
+
+    .text-center { text-align: center; }
+    .mt-12 { margin-top: 12px; }
+    .mt-16 { margin-top: 16px; }
+    .divider {
+      border: none;
+      border-top: 1px solid var(--input-border);
+      margin: 20px 0;
+    }
+
+    /* ─── Modal ─── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-overlay.open { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal {
+      background: #0f1f38;
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .modal-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+    .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .modal-actions .btn { flex: 1; }
+
+    /* Timer */
+    .timer-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .timer-val { color: var(--warning); font-weight: 700; font-size: 14px; }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <div class="logo-strip">
-    <img src="https://kekhaibaohiem.cc/assets/images/logo_text.svg" alt="BHXH Logo" onerror="this.style.display='none'">
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<div class="wrap">
+  <div class="site-header">
+    <img src="https://kekhaibaohiem.cc/assets/images/logo_text.svg" alt="BHXH" onerror="this.style.display='none'">
   </div>
-  <h1>Đăng Nhập Quản Trị</h1>
-  <p class="sub">Dành riêng cho ban quản lý hệ thống</p>
 
-  <div class="error-msg" id="error-msg"></div>
+  <div class="card">
+    <!-- Step indicator -->
+    <div class="step-indicator" id="step-indicator">
+      <div class="step-dot active" id="dot-1"><span class="step-num">1</span></div>
+      <div class="step-line" id="line-1"></div>
+      <div class="step-dot" id="dot-2"><span class="step-num">2</span></div>
+      <div class="step-line" id="line-2"></div>
+      <div class="step-dot" id="dot-3"><span class="step-num">3</span></div>
+    </div>
 
-  <form id="admin-login-form" autocomplete="off">
-    <div class="form-group">
-      <label for="username">Tài khoản</label>
-      <input type="text" id="username" name="username" placeholder="Nhập tên tài khoản" required autocomplete="username">
+    <!-- ═══════════════ SCREEN 1: Username / Password ═══════════════ -->
+    <div class="screen active" id="screen-login">
+      <div class="screen-title">Đăng Nhập Quản Trị</div>
+      <div class="screen-sub">Dành riêng cho ban quản lý hệ thống</div>
+
+      <div class="alert alert-error" id="login-error"></div>
+
+      <form id="login-form" autocomplete="off">
+        <div class="form-group">
+          <label for="username">Tài khoản</label>
+          <input type="text" id="username" name="username" placeholder="Nhập tên tài khoản" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="password">Mật khẩu</label>
+          <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary" id="btn-login">
+          <span class="btn-text">Tiếp tục →</span>
+          <div class="spinner"></div>
+        </button>
+      </form>
+
+      <div class="text-center mt-16">
+        <button class="link-btn" id="open-reset-modal">Quên / mất thiết bị 2FA? Reset tại đây</button>
+      </div>
     </div>
-    <div class="form-group">
-      <label for="password">Mật khẩu</label>
-      <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required autocomplete="current-password">
+
+    <!-- ═══════════════ SCREEN 2A: Setup QR (first time) ═══════════════ -->
+    <div class="screen" id="screen-setup">
+      <div class="screen-title">🔐 Cài Đặt 2FA</div>
+      <div class="screen-sub">Lần đầu đăng nhập — quét mã QR bên dưới bằng ứng dụng <strong style="color:var(--text)">Google Authenticator</strong> hoặc <strong style="color:var(--text)">Microsoft Authenticator</strong></div>
+
+      <div class="alert alert-error" id="setup-error"></div>
+
+      <!-- Emergency code — shown once -->
+      <div class="emergency-banner" id="emergency-banner">
+        <div class="em-title">⚠️ Mã Khẩn Cấp — Chỉ Hiện 1 Lần!</div>
+        <div class="em-code" id="emergency-code-display">──────────────────────────</div>
+        <div class="em-desc">Sao chép và lưu mã này vào nơi an toàn. Đây là mã duy nhất để reset 2FA nếu bạn mất điện thoại. Sau khi rời trang, mã sẽ không hiện lại.</div>
+      </div>
+
+      <div class="qr-wrap">
+        <div class="qr-box"><img id="qr-img" src="" alt="QR Code 2FA"></div>
+        <div class="secret-box">
+          <span class="secret-code" id="secret-display"></span>
+          <button class="copy-btn" id="copy-secret-btn" type="button">Sao chép</button>
+        </div>
+      </div>
+
+      <p style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:16px;">Sau khi quét xong, nhập mã 6 số từ ứng dụng để xác nhận:</p>
+
+      <form id="setup-form">
+        <div class="form-group">
+          <label for="setup-totp">Mã xác thực (6 số)</label>
+          <input type="tel" id="setup-totp" class="otp-input" maxlength="6" placeholder="000000" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code">
+        </div>
+        <button type="submit" class="btn btn-primary" id="btn-setup">
+          <span class="btn-text">Xác Nhận & Kích Hoạt 2FA</span>
+          <div class="spinner"></div>
+        </button>
+      </form>
     </div>
-    <button type="submit" class="btn-login">Đăng Nhập</button>
-  </form>
+
+    <!-- ═══════════════ SCREEN 2B: Enter TOTP ═══════════════ -->
+    <div class="screen" id="screen-totp">
+      <div class="screen-title">🔑 Xác Thực 2 Yếu Tố</div>
+      <div class="screen-sub">Mở ứng dụng Authenticator trên điện thoại và nhập mã 6 số</div>
+
+      <div class="alert alert-error" id="totp-error"></div>
+
+      <div class="timer-wrap">
+        <span>Phiên hết hạn sau:</span>
+        <span class="timer-val" id="timer-display">05:00</span>
+      </div>
+
+      <form id="totp-form">
+        <div class="form-group">
+          <label for="totp-code">Mã xác thực</label>
+          <input type="tel" id="totp-code" class="otp-input" maxlength="6" placeholder="000000" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code">
+        </div>
+        <button type="submit" class="btn btn-primary" id="btn-totp">
+          <span class="btn-text">Xác Nhận Đăng Nhập</span>
+          <div class="spinner"></div>
+        </button>
+        <div class="text-center mt-12">
+          <button type="button" class="link-btn" id="back-to-login">← Quay lại đăng nhập</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ═══════════════ SCREEN 3: Success ═══════════════ -->
+    <div class="screen" id="screen-success">
+      <div style="text-align:center;padding:20px 0;">
+        <div style="font-size:56px;margin-bottom:16px;">✅</div>
+        <div class="screen-title">Đăng nhập thành công!</div>
+        <div class="screen-sub" style="margin-top:8px;">Đang chuyển đến trang quản trị…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Modal: Reset 2FA ═══ -->
+<div class="modal-overlay" id="reset-modal">
+  <div class="modal">
+    <div class="modal-title">🆘 Reset 2FA Khẩn Cấp</div>
+    <div class="modal-sub">Nhập tài khoản, mật khẩu và mã khẩn cấp được cấp lúc cài đặt để reset 2FA.</div>
+
+    <div class="alert alert-error" id="reset-error"></div>
+    <div class="alert alert-success" id="reset-success"></div>
+
+    <form id="reset-form" autocomplete="off">
+      <div class="form-group">
+        <label for="reset-username">Tài khoản</label>
+        <input type="text" id="reset-username" placeholder="Tên tài khoản" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label for="reset-password">Mật khẩu</label>
+        <input type="password" id="reset-password" placeholder="Mật khẩu" autocomplete="current-password">
+      </div>
+      <div class="form-group">
+        <label for="reset-emergency">Mã Khẩn Cấp</label>
+        <input type="text" id="reset-emergency" placeholder="Nhập mã khẩn cấp đã lưu" style="font-family:'Courier New',monospace;letter-spacing:2px;">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="close-reset-modal">Hủy</button>
+        <button type="submit" class="btn btn-danger" id="btn-reset">
+          <span class="btn-text">Reset 2FA</span>
+          <div class="spinner"></div>
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <script>
-document.getElementById('admin-login-form').addEventListener('submit', function(e) {
+// ─── State ──────────────────────────────────────────────────────────────────
+let preAuthToken = null;
+let timerInterval = null;
+let timerSeconds = 300;
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function setStep(n) {
+  // n = 1, 2, 3
+  const dots = [1,2,3];
+  dots.forEach(i => {
+    const dot = document.getElementById('dot-' + i);
+    dot.classList.remove('active', 'done');
+    if (i < n) dot.classList.add('done');
+    else if (i === n) dot.classList.add('active');
+  });
+  [1,2].forEach(i => {
+    const line = document.getElementById('line-' + i);
+    line.classList.toggle('done', i < n);
+  });
+}
+
+function setLoading(btn, loading) {
+  btn.classList.toggle('loading', loading);
+  btn.disabled = loading;
+}
+
+function showAlert(id, msg, type = 'error') {
+  const el = document.getElementById(id);
+  el.className = `alert alert-${type} show`;
+  el.innerHTML = msg;
+}
+
+function hideAlert(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('show');
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timerSeconds = 300;
+  const display = document.getElementById('timer-display');
+  function tick() {
+    const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+    const s = (timerSeconds % 60).toString().padStart(2, '0');
+    display.textContent = `${m}:${s}`;
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      display.textContent = '00:00';
+      showAlert('totp-error', 'Phiên xác thực đã hết hạn. Vui lòng đăng nhập lại.', 'error');
+      preAuthToken = null;
+    }
+    timerSeconds--;
+  }
+  tick();
+  timerInterval = setInterval(tick, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+}
+
+// ─── Step 1: Login form ──────────────────────────────────────────────────────
+document.getElementById('login-form').addEventListener('submit', async function(e) {
   e.preventDefault();
+  hideAlert('login-error');
+  const btn = document.getElementById('btn-login');
+  setLoading(btn, true);
+
   const u = document.getElementById('username').value.trim();
   const p = document.getElementById('password').value;
-  const err = document.getElementById('error-msg');
-  err.style.display = 'none';
 
-  fetch('/api/admin/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: u, password: p })
-  })
-  .then(res => res.json().then(data => ({ status: res.status, body: data })))
-  .then(res => {
-    if (res.status === 200) {
-      window.location.href = '/admin';
-    } else {
-      err.style.display = 'block';
-      err.innerText = res.body.error || 'Đăng nhập thất bại';
+  try {
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showAlert('login-error', data.error || 'Đăng nhập thất bại', 'error');
+      setLoading(btn, false);
+      return;
     }
-  })
-  .catch(() => {
-    err.style.display = 'block';
-    err.innerText = 'Lỗi kết nối. Vui lòng thử lại.';
+
+    preAuthToken = data.preAuthToken;
+    setStep(2);
+
+    if (data.requireSetup) {
+      // Lần đầu: hiện QR setup
+      document.getElementById('qr-img').src = data.qrCodeUrl;
+      document.getElementById('secret-display').textContent = data.secret;
+      document.getElementById('emergency-code-display').textContent = data.emergencyCode;
+      showScreen('setup');
+      document.getElementById('setup-totp').focus();
+    } else if (data.require2FA) {
+      // Đã cài đặt: hiện ô nhập mã
+      showScreen('totp');
+      startTimer();
+      document.getElementById('totp-code').focus();
+    }
+  } catch {
+    showAlert('login-error', 'Lỗi kết nối. Vui lòng thử lại.', 'error');
+  }
+
+  setLoading(btn, false);
+});
+
+// ─── Step 2A: Setup confirm ──────────────────────────────────────────────────
+document.getElementById('setup-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  hideAlert('setup-error');
+  const btn = document.getElementById('btn-setup');
+  setLoading(btn, true);
+
+  const totp = document.getElementById('setup-totp').value.trim();
+  if (!/^\d{6}$/.test(totp)) {
+    showAlert('setup-error', 'Vui lòng nhập đúng mã 6 chữ số từ ứng dụng Authenticator', 'error');
+    setLoading(btn, false);
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/verify-2fa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ totp, preAuthToken, confirmSetup: true })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showAlert('setup-error', data.error || 'Mã không đúng, vui lòng thử lại', 'error');
+      setLoading(btn, false);
+      return;
+    }
+
+    setStep(3);
+    showScreen('success');
+    setTimeout(() => { window.location.href = '/admin'; }, 1500);
+  } catch {
+    showAlert('setup-error', 'Lỗi kết nối. Vui lòng thử lại.', 'error');
+    setLoading(btn, false);
+  }
+});
+
+// ─── Step 2B: TOTP verify ────────────────────────────────────────────────────
+document.getElementById('totp-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  hideAlert('totp-error');
+  const btn = document.getElementById('btn-totp');
+  setLoading(btn, true);
+
+  const totp = document.getElementById('totp-code').value.trim();
+  if (!/^\d{6}$/.test(totp)) {
+    showAlert('totp-error', 'Vui lòng nhập đúng mã 6 chữ số', 'error');
+    setLoading(btn, false);
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/verify-2fa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ totp, preAuthToken })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showAlert('totp-error', data.error || 'Mã không đúng, vui lòng thử lại', 'error');
+      setLoading(btn, false);
+      return;
+    }
+
+    stopTimer();
+    setStep(3);
+    showScreen('success');
+    setTimeout(() => { window.location.href = '/admin'; }, 1500);
+  } catch {
+    showAlert('totp-error', 'Lỗi kết nối. Vui lòng thử lại.', 'error');
+    setLoading(btn, false);
+  }
+});
+
+// Back button
+document.getElementById('back-to-login').addEventListener('click', function() {
+  stopTimer();
+  preAuthToken = null;
+  setStep(1);
+  showScreen('login');
+  document.getElementById('totp-code').value = '';
+  hideAlert('totp-error');
+});
+
+// ─── OTP auto-format (numbers only) ─────────────────────────────────────────
+['setup-totp', 'totp-code'].forEach(id => {
+  const input = document.getElementById(id);
+  input.addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 6);
+  });
+  // Auto-submit khi đủ 6 số
+  input.addEventListener('input', function() {
+    if (this.value.length === 6) {
+      const form = this.closest('form');
+      if (form) form.requestSubmit();
+    }
   });
 });
-</script>
 
+// ─── Copy secret ─────────────────────────────────────────────────────────────
+document.getElementById('copy-secret-btn').addEventListener('click', function() {
+  const secret = document.getElementById('secret-display').textContent;
+  navigator.clipboard.writeText(secret).then(() => {
+    this.textContent = '✓ Đã chép';
+    setTimeout(() => { this.textContent = 'Sao chép'; }, 2000);
+  });
+});
+
+// ─── Reset 2FA Modal ─────────────────────────────────────────────────────────
+document.getElementById('open-reset-modal').addEventListener('click', function() {
+  document.getElementById('reset-modal').classList.add('open');
+  hideAlert('reset-error');
+  hideAlert('reset-success');
+});
+
+document.getElementById('close-reset-modal').addEventListener('click', function() {
+  document.getElementById('reset-modal').classList.remove('open');
+});
+
+document.getElementById('reset-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+
+document.getElementById('reset-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  hideAlert('reset-error');
+  hideAlert('reset-success');
+  const btn = document.getElementById('btn-reset');
+  setLoading(btn, true);
+
+  const username = document.getElementById('reset-username').value.trim();
+  const password = document.getElementById('reset-password').value;
+  const emergencyCode = document.getElementById('reset-emergency').value.trim();
+
+  try {
+    const res = await fetch('/api/admin/reset-2fa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password, emergencyCode })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showAlert('reset-error', data.error || 'Reset thất bại', 'error');
+    } else {
+      showAlert('reset-success', '✅ ' + data.message, 'success');
+      this.reset();
+      setTimeout(() => { document.getElementById('reset-modal').classList.remove('open'); }, 3000);
+    }
+  } catch {
+    showAlert('reset-error', 'Lỗi kết nối. Vui lòng thử lại.', 'error');
+  }
+
+  setLoading(btn, false);
+});
+</script>
 </body>
 </html>

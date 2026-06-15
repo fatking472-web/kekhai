@@ -337,7 +337,7 @@ adminLoginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   setAdminMessage('Đang đăng nhập...');
   try {
-    await api('/api/login', {
+    await api('/api/admin/login', {
       method: 'POST',
       body: JSON.stringify(formData(adminLoginForm))
     });
@@ -383,6 +383,35 @@ userDetail.addEventListener('click', (event) => {
 adminLogout.addEventListener('click', async () => {
   await api('/api/logout', { method: 'POST', body: '{}' });
   window.location.reload();
+});
+
+const exportButton = document.getElementById('exportButton');
+exportButton.addEventListener('click', async () => {
+  exportButton.disabled = true;
+  exportButton.textContent = 'Đang xuất...';
+  try {
+    const response = await fetch('/api/admin/export.xls', {
+      credentials: 'same-origin'
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || 'Lỗi xuất file');
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'danh-sach-dang-ky.xls';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    setAdminMessage(error.message, 'error');
+  } finally {
+    exportButton.disabled = false;
+    exportButton.textContent = 'Xuất Excel';
+  }
 });
 
 checkAdmin().catch(() => {});

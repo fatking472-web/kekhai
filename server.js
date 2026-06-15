@@ -2,6 +2,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const speakeasy = require('speakeasy');
+const QRCode = require('qrcode');
 
 const PORT = Number(process.env.PORT || 3000);
 const ROOT_DIR = __dirname;
@@ -9,12 +11,50 @@ const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
 const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(ROOT_DIR, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
+const TOTP_FILE = path.join(DATA_DIR, 'admin-2fa.json');
 const SESSION_COOKIE = 'kb_session';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const PRE_AUTH_TTL_MS = 5 * 60 * 1000; // 5 phút cho bước chờ nhập OTP
 const MAX_BODY_BYTES = 16 * 1024 * 1024;
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin12345';
+
+// ─── 2FA TOTP helpers ────────────────────────────────────────────────────────
+function readTotpConfig() {
+  try {
+    return JSON.parse(fs.readFileSync(TOTP_FILE, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function writeTotpConfig(config) {
+  ensureStore();
+  const tempFile = `${TOTP_FILE}.tmp`;
+  fs.writeFileSync(tempFile, `${JSON.stringify(config, null, 2)}\n`);
+  fs.renameSync(tempFile, TOTP_FILE);
+}
+
+async function generateQrCodeUrl(secret) {
+  const otpAuthUrl = speakeasy.otpauthUrl({
+    secret,
+    label: ADMIN_USERNAME,
+    issuer: 'BHXH Admin',
+    encoding: 'base32'
+  });
+  return QRCode.toDataURL(otpAuthUrl);
+}
+
+function generateTotpSecret() {
+  const result = speakeasy.generateSecret({ length: 20, name: 'BHXH Admin', issuer: 'BHXH' });
+  return result.base32;
+}
+
+function verifyTotp(token, secret) {
+  return speakeasy.totp.verify({ secret, encoding: 'base32', token: String(token), window: 1 });
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 const contentTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -416,11 +456,111 @@ async function handleApi(req, res, pathname) {
     const username = String(body.username || '').trim();
     const password = String(body.password || '');
 
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      createSession(res, 'admin', 'admin');
-      return sendJson(res, 200, { user: { username: ADMIN_USERNAME, role: 'admin' } });
+    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+      return sendError(res, 401, 'Tài khoản hoặc mật khẩu không chính xác');
     }
-    return sendError(res, 401, 'Tài khoản hoặc mật khẩu không chính xác');
+
+    // Tạo pre-auth token tạm thời (chờ xác thực 2FA)
+    const preAuthToken = crypto.randomBytes(32).toString('hex');
+    const sessions = readJson(SESSIONS_FILE, {});
+    sessions[preAuthToken] = {
+      principalId: 'admin',
+      role: 'admin',
+      pendingTwoFactor: true,
+      createdAt: nowIso(),
+      expiresAt: new Date(Date.now() + PRE_AUTH_TTL_MS).toISOString()
+    };
+    writeJson(SESSIONS_FILE, sessions);
+
+    const totpConfig = readTotpConfig();
+
+    if (!totpConfig || !totpConfig.verified) {
+      // Lần đầu: sinh secret + emergency code, hiện QR để admin quét
+      const secret = generateTotpSecret();
+      const emergencyCode = crypto.randomBytes(12).toString('hex').toUpperCase();
+      const emergencyHash = crypto.createHash('sha256').update(emergencyCode).digest('hex');
+
+      // Lưu tạm (chưa verified)
+      writeTotpConfig({
+        secret,
+        verified: false,
+        emergencyHash,
+        setupAt: null
+      });
+
+      const qrCodeUrl = await generateQrCodeUrl(secret);
+      return sendJson(res, 200, {
+        requireSetup: true,
+        qrCodeUrl,
+        secret,
+        emergencyCode, // Chỉ hiện 1 lần duy nhất này!
+        preAuthToken
+      });
+    }
+
+    // 2FA đã được cài đặt: yêu cầu nhập mã TOTP
+    return sendJson(res, 200, { require2FA: true, preAuthToken });
+  }
+
+  if (req.method === 'POST' && pathname === '/api/admin/verify-2fa') {
+    const body = await readBody(req);
+    const totp = String(body.totp || '').trim();
+    const preAuthToken = String(body.preAuthToken || '').trim();
+    const confirmSetup = !!body.confirmSetup;
+
+    // Kiểm tra pre-auth token
+    const sessions = readJson(SESSIONS_FILE, {});
+    const preAuth = sessions[preAuthToken];
+    if (!preAuth || !preAuth.pendingTwoFactor || new Date(preAuth.expiresAt).getTime() <= Date.now()) {
+      return sendError(res, 401, 'Phiên xác thực hết hạn, vui lòng đăng nhập lại');
+    }
+
+    const totpConfig = readTotpConfig();
+    if (!totpConfig || !totpConfig.secret) {
+      return sendError(res, 500, 'Lỗi cấu hình 2FA');
+    }
+
+    const isValid = verifyTotp(totp, totpConfig.secret);
+    if (!isValid) {
+      return sendError(res, 401, 'Mã xác thực không đúng hoặc đã hết hạn');
+    }
+
+    // Nếu là lần setup đầu tiên: đánh dấu verified
+    if (confirmSetup && !totpConfig.verified) {
+      writeTotpConfig({ ...totpConfig, verified: true, setupAt: nowIso() });
+    }
+
+    // Xóa pre-auth token và tạo session thật
+    delete sessions[preAuthToken];
+    writeJson(SESSIONS_FILE, sessions);
+    createSession(res, 'admin', 'admin');
+    return sendJson(res, 200, { user: { username: ADMIN_USERNAME, role: 'admin' } });
+  }
+
+  if (req.method === 'POST' && pathname === '/api/admin/reset-2fa') {
+    const body = await readBody(req);
+    const emergencyCode = String(body.emergencyCode || '').trim().toUpperCase();
+    const username = String(body.username || '').trim();
+    const password = String(body.password || '');
+
+    // Phải xác thực mật khẩu trước
+    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+      return sendError(res, 401, 'Tài khoản hoặc mật khẩu không chính xác');
+    }
+
+    const totpConfig = readTotpConfig();
+    if (!totpConfig || !totpConfig.emergencyHash) {
+      return sendError(res, 400, '2FA chưa được cài đặt');
+    }
+
+    const inputHash = crypto.createHash('sha256').update(emergencyCode).digest('hex');
+    if (inputHash !== totpConfig.emergencyHash) {
+      return sendError(res, 401, 'Mã khẩn cấp không đúng');
+    }
+
+    // Xóa 2FA để admin quét lại QR trong lần đăng nhập tiếp theo
+    fs.unlinkSync(TOTP_FILE);
+    return sendJson(res, 200, { ok: true, message: '2FA đã được reset. Vui lòng đăng nhập lại để cài đặt mã QR mới.' });
   }
 
   if (req.method === 'POST' && pathname === '/api/login') {
