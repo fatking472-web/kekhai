@@ -44,3 +44,4 @@ Du lieu nguoi dung duoc luu trong `data/users.json`. Khi deploy production, nen 
 docker build -t kekhaibaohiem .
 docker run -p 3000:3000 -e ADMIN_USERNAME=admin -e ADMIN_PASSWORD=mat-khau-manh -v ${PWD}/data:/app/data kekhaibaohiem
 ```
+"# kekhai" 
