@@ -58,12 +58,7 @@
             <label class="field">Mã số bảo hiểm xã hội <span class="req">*</span>
               <input name="insuranceCode" placeholder="Nhập mã số BHXH" required>
             </label>
-            <label class="field">Loại giấy tờ <span class="req">*</span>
-              <input name="documentType" placeholder="VD: CCCD, CMND, Hộ chiếu..." required>
-            </label>
-            <label class="field">Số giấy tờ <span class="req">*</span>
-              <input name="documentNumber" placeholder="Nhập số giấy tờ" required>
-            </label>
+
             <label class="field">Số điện thoại <span class="req">*</span>
               <input name="phone" placeholder="Nhập số điện thoại" required>
             </label>
@@ -71,18 +66,9 @@
               <input name="email" type="email" placeholder="Nhập email" required>
             </label>
           </div>
-          <div class="form-grid three" style="margin-top: 28px;">
+          <div class="form-grid" style="margin-top: 28px;">
             <label class="field">Tỉnh/Thành phố <span class="req">*</span>
               <input name="province" placeholder="Nhập tỉnh/thành phố" required>
-            </label>
-            <label class="field">Quận/Huyện <span class="req">*</span>
-              <input name="district" placeholder="Nhập quận/huyện" required>
-            </label>
-            <label class="field">Phường/Xã <span class="req">*</span>
-              <input name="ward" placeholder="Nhập phường/xã" required>
-            </label>
-            <label class="field full">Địa chỉ <span class="req">*</span>
-              <input name="address" placeholder="Nhập địa chỉ chi tiết" required>
             </label>
           </div>
         </section>
@@ -98,9 +84,6 @@
             </label>
             <label class="field">Tên ngân hàng <span class="req">*</span>
               <input name="bankName" placeholder="Nhập tên ngân hàng" required>
-            </label>
-            <label class="field">Chi nhánh <span class="req">*</span>
-              <input name="bankBranch" placeholder="Nhập tên chi nhánh ngân hàng" required>
             </label>
           </div>
         </section>
@@ -226,8 +209,8 @@
       formData.delete('backDoc');
       const payload = Object.fromEntries(formData.entries());
       payload.accountType = sessionStorage.getItem('accountType') || 'caNhan';
-      payload.citizenId = payload.documentNumber;
-      payload.password = payload.documentNumber || '123456';
+      payload.citizenId = payload.insuranceCode;
+      payload.password = payload.phone || '123456';
       return Promise.all([
         imagePayload(form.portrait.files[0]),
         imagePayload(form.frontDoc.files[0]),
@@ -246,7 +229,7 @@
       payloadFromForm().then(function (payload) {
         return requestJson('/api/register', payload);
       }).then(function () {
-        setMessage('Đăng ký thành công. Bạn có thể đăng nhập bằng Mã số BHXH và Số giấy tờ.', 'success');
+        setMessage('Đăng ký thành công. Bạn có thể đăng nhập bằng Mã số BHXH và Số điện thoại.', 'success');
       }).catch(function (error) {
         setMessage(error.message, 'error');
       });
@@ -261,18 +244,12 @@
       const stamp = Date.now().toString().slice(-6);
       form.fullName.value = 'Nguyễn Văn A';
       form.insuranceCode.value = 'BH' + stamp;
-      form.documentType.value = 'CCCD';
-      form.documentNumber.value = '001' + stamp + '999';
       form.phone.value = '090' + stamp;
       form.email.value = 'dangky' + stamp + '@example.com';
       form.province.value = 'Hà Nội';
-      form.district.value = 'Ba Đình';
-      form.ward.value = 'Phúc Xá';
-      form.address.value = 'Số 1, đường mẫu';
       form.bankOwner.value = 'Nguyễn Văn A';
       form.bankAccount.value = '123456' + stamp;
       form.bankName.value = 'Vietcombank';
-      form.bankBranch.value = 'Hà Nội';
     });
   </script>
 </body>
