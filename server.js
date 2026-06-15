@@ -37,9 +37,9 @@ function writeTotpConfig(config) {
 }
 
 async function generateQrCodeUrl(secret) {
-  const otpAuthUrl = speakeasy.otpauthUrl({
+  const otpAuthUrl = speakeasy.otpauthURL({
     secret,
-    label: ADMIN_USERNAME,
+    label: encodeURIComponent('BHXH Admin:' + ADMIN_USERNAME),
     issuer: 'BHXH Admin',
     encoding: 'base32'
   });
