@@ -6506,11 +6506,11 @@ ul[_ngcontent-c13] {
                                             <!----><a _ngcontent-c13="" title="Kê khai"
                                                 href="https://kekhaibaohiem.cc/assets/images/bg_01.svg" ><img _ngcontent-c13="" alt="image"
                                                     src="https://kekhaibaohiem.cc/assets/images/kekhai.svg"></a></li>
-                                        <li _ngcontent-c13=""><a _ngcontent-c13="" href="#" onclick="document.getElementById('modalDatLich').style.display='flex'; return false;"><img
+                                        <li _ngcontent-c13=""><a _ngcontent-c13="" href="#" onclick="showDatLichModal(); return false;"><img
                                                     _ngcontent-c13="" alt="image"
                                                     src="https://kekhaibaohiem.cc/assets/images/datlich.svg"></a></li>
                                         <li _ngcontent-c13=""><a _ngcontent-c13=""
-                                                href="#" onclick="showVietQRModal(); return false;"><img
+                                                href="#" onclick="document.getElementById('modalKhaiBaoYTe').style.display='flex'; return false;"><img
                                                     _ngcontent-c13="" alt="image"
                                                     src="https://kekhaibaohiem.cc/assets/images/thanhtoanbhxhdientu-01.svg"></a>
                                         </li>
@@ -7542,6 +7542,7 @@ ul[_ngcontent-c13] {
   <div class="custom-modal">
     <span class="close-btn" onclick="document.getElementById('modalDatLich').style.display='none'">&times;</span>
     <h3>Đặt lịch làm việc</h3>
+    <div id="datlichVietQRContainer" style="text-align: center; margin-bottom: 15px;"></div>
     <form id="formDatLich">
       <label>Thời gian đặt lịch</label>
       <input type="datetime-local" id="datlichTime" required>
@@ -7552,12 +7553,11 @@ ul[_ngcontent-c13] {
   </div>
 </div>
 
-<div id="modalVietQR" class="custom-modal-overlay">
-  <div class="custom-modal">
-    <span class="close-btn" onclick="document.getElementById('modalVietQR').style.display='none'">&times;</span>
-    <h3 id="vqTitle">Thanh toán điện tử</h3>
-    <p class="vietqr-text" id="vqInstruction">Vui lòng quét mã QR để thanh toán.</p>
-    <div id="vietqrImageContainer"></div>
+<div id="modalKhaiBaoYTe" class="custom-modal-overlay">
+  <div class="custom-modal" style="text-align: center; width: 600px; max-width: 90%;">
+    <span class="close-btn" onclick="document.getElementById('modalKhaiBaoYTe').style.display='none'">&times;</span>
+    <h3>Khai báo y tế</h3>
+    <img src="/assets/images/khai-bao-y-te.jpg" alt="Khai báo y tế" style="max-width: 100%; border-radius: 8px; margin-top: 10px;" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Vui+long+cap+nhat+anh+Khai+Bao+Y+Te';">
   </div>
 </div>
 
@@ -7586,9 +7586,10 @@ document.getElementById('formDatLich').addEventListener('submit', async function
   }
 });
 
-async function showVietQRModal() {
-  document.getElementById('modalVietQR').style.display = 'flex';
-  const container = document.getElementById('vietqrImageContainer');
+async function showDatLichModal() {
+  document.getElementById('modalDatLich').style.display = 'flex';
+  const container = document.getElementById('datlichVietQRContainer');
+  if (!container) return;
   container.innerHTML = 'Đang tải mã QR...';
   
   try {
@@ -7596,16 +7597,13 @@ async function showVietQRModal() {
     const data = await res.json();
     if (data.ok && data.config) {
       const c = data.config;
-      document.getElementById('vqTitle').textContent = c.title || 'Thanh toán điện tử';
-      document.getElementById('vqInstruction').textContent = c.instruction || 'Vui lòng quét mã QR.';
-      
       const qrUrl = `https://img.vietqr.io/image/${c.bank_id}-${c.account_no}-compact.png?amount=${c.amount || 0}&addInfo=${encodeURIComponent(c.description || '')}&accountName=${encodeURIComponent(c.account_name || '')}`;
-      container.innerHTML = `<img src="${qrUrl}" alt="VietQR">`;
+      container.innerHTML = `<img src="${qrUrl}" alt="VietQR" style="max-width: 150px; border-radius: 8px; border: 1px solid #ddd;"><p class="vietqr-text" style="margin-top: 5px; margin-bottom: 0;">Vui lòng quét mã QR để thanh toán phí đặt lịch.</p>`;
     } else {
-      container.innerHTML = 'Chưa có cấu hình mã QR.';
+      container.innerHTML = '';
     }
   } catch (err) {
-    container.innerHTML = 'Lỗi tải mã QR.';
+    container.innerHTML = '';
   }
 }
 </script>
