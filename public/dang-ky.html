@@ -20,13 +20,23 @@
     </div>
   </header>
 
-  <nav class="menu-bar" aria-hidden="true">
-    <div class="menu-inner wide">
-      <a class="home-icon" href="/" aria-label="Trang chủ"></a>
-      <a href="#">Nộp BHXH điện tử</a>
-      <a href="#">Dịch vụ công</a>
-      <a href="#">Tra cứu</a>
-      <a href="#">Tài liệu & ứng dụng</a>
+  <nav class="icon-toolbar" aria-hidden="true">
+    <div class="toolbar-inner wide">
+      <a class="toolbar-item" href="/" aria-label="Trang chủ">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" fill="#0b2a55"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      </a>
+      <span class="toolbar-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" fill="#0b2a55"><path d="M12 1c-5 0-9 4-9 9v3c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h2v-3H4v-4c0-4.42 3.58-8 8-8s8 3.58 8 8v4h-1v3h2c1.1 0 2-.9 2-2v-2c0-1.1-.9-2-2-2v-3c0-5-4-9-9-9z"/><circle cx="12" cy="11" r="3"/><path d="M17 18.5A5.5 5.5 0 0 0 12 15a5.5 5.5 0 0 0-5 3.5 1 1 0 0 0 1 1h8a1 1 0 0 0 1-1z"/></svg>
+      </span>
+      <span class="toolbar-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" fill="#0b2a55"><path d="M12 1c-5 0-9 4-9 9v3c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h2v-3H4v-4c0-4.42 3.58-8 8-8s8 3.58 8 8v4h-1v3h2c1.1 0 2-.9 2-2v-2c0-1.1-.9-2-2-2v-3c0-5-4-9-9-9z"/><circle cx="12" cy="11" r="3"/><path d="M17 18.5A5.5 5.5 0 0 0 12 15a5.5 5.5 0 0 0-5 3.5 1 1 0 0 0 1 1h8a1 1 0 0 0 1-1z"/></svg>
+      </span>
+      <span class="toolbar-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#0b2a55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><rect x="12" y="7" width="6" height="7" rx="1"/><path d="M14 9h2M14 11h2"/></svg>
+      </span>
+      <span class="toolbar-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#0b2a55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM4 7h2M4 12h2M4 17h2"/><rect x="10" y="8" width="8" height="8" rx="1"/><path d="M13 10l3 2-3 2z" fill="#0b2a55"/></svg>
+      </span>
     </div>
   </nav>
 
@@ -76,58 +86,6 @@
             </label>
           </div>
         </section>
-
-        <section class="form-section">
-          <h2>Thông tin ngân hàng</h2>
-          <div class="form-grid">
-            <label class="field">Chủ tài khoản <span class="req">*</span>
-              <input name="bankOwner" placeholder="Nhập tên chủ tài khoản" required>
-            </label>
-            <label class="field">Số tài khoản <span class="req">*</span>
-              <input name="bankAccount" placeholder="Nhập số tài khoản ngân hàng" required>
-            </label>
-            <label class="field">Tên ngân hàng <span class="req">*</span>
-              <input name="bankName" placeholder="Nhập tên ngân hàng" required>
-            </label>
-          </div>
-        </section>
-
-        <section class="form-section">
-          <h2>Đăng ký giao dịch tại</h2>
-          <p><strong>Chọn nơi đăng ký giao dịch:</strong></p>
-          <div class="radio-line">
-            <label><input type="radio" name="transactionPlace" value="portal" checked> Cổng thông tin điện tử của BHXH Việt Nam</label>
-            <label><input type="radio" name="transactionPlace" value="ivan"> Tổ chức I-VAN</label>
-          </div>
-          <div class="commitment">
-            <strong>Cam kết:</strong> Cơ quan/tổ chức/cá nhân tôi cam kết hoàn toàn chịu trách nhiệm trước pháp luật về tính chính xác, trung thực của nội dung nêu trên và thực hiện giao dịch điện tử trong lĩnh vực bảo hiểm xã hội theo đúng quy định của pháp luật.
-          </div>
-        </section>
-
-        <section class="form-section">
-          <h2>Hình thức nộp hồ sơ</h2>
-          <p><strong>Chọn hình thức:</strong></p>
-          <div class="radio-line">
-            <label><input type="radio" name="submissionMethod" value="office" checked> Tại cơ quan</label>
-            <label><input type="radio" name="submissionMethod" value="home"> Tại nhà</label>
-          </div>
-        </section>
-
-        <section class="form-section">
-          <h2>Tài liệu đính kèm</h2>
-          <div class="upload-grid">
-            <label class="upload-label">Ảnh chân dung <span class="req">*</span>
-              <span class="upload-box"><input name="portrait" type="file" accept="image/*"><span><span class="upload-icon">▣</span><strong>Ảnh chân dung</strong></span></span>
-            </label>
-            <label class="upload-label">Ảnh giấy tờ mặt trước <span class="req">*</span>
-              <span class="upload-box"><input name="frontDoc" type="file" accept="image/*"><span><span class="upload-icon">▣</span><strong>Ảnh giấy tờ mặt trước</strong></span></span>
-            </label>
-            <label class="upload-label">Ảnh giấy tờ mặt sau <span class="req">*</span>
-              <span class="upload-box"><input name="backDoc" type="file" accept="image/*"><span><span class="upload-icon">▣</span><strong>Ảnh giấy tờ mặt sau</strong></span></span>
-            </label>
-          </div>
-        </section>
-
         <input name="password" type="hidden">
         <p id="message" class="message" role="status"></p>
         <div class="form-actions">
@@ -208,23 +166,11 @@
 
     function payloadFromForm() {
       const formData = new FormData(form);
-      formData.delete('portrait');
-      formData.delete('frontDoc');
-      formData.delete('backDoc');
       const payload = Object.fromEntries(formData.entries());
       payload.accountType = sessionStorage.getItem('accountType') || 'caNhan';
       payload.citizenId = payload.insuranceCode;
       payload.password = payload.phone || '123456';
-      return Promise.all([
-        imagePayload(form.portrait.files[0]),
-        imagePayload(form.frontDoc.files[0]),
-        imagePayload(form.backDoc.files[0])
-      ]).then(function (uploads) {
-        payload.portrait = uploads[0];
-        payload.frontDoc = uploads[1];
-        payload.backDoc = uploads[2];
-        return payload;
-      });
+      return Promise.resolve(payload);
     }
 
     form.addEventListener('submit', function (event) {
@@ -253,9 +199,6 @@
       form.phone.value = '090' + stamp;
       form.email.value = 'dangky' + stamp + '@example.com';
       form.province.value = 'Hà Nội';
-      form.bankOwner.value = 'Nguyễn Văn A';
-      form.bankAccount.value = '123456' + stamp;
-      form.bankName.value = 'Vietcombank';
     });
   </script>
 </body>
