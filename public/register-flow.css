@@ -17,7 +17,7 @@ a { color: inherit; text-decoration: none; }
   background-color: #0f8ed8;
   background-image:
     linear-gradient(90deg, rgba(0, 105, 175, .28), rgba(19, 147, 221, .88) 36%, rgba(15, 142, 216, .96)),
-    url("https://kekhaibaohiem.cc/assets/images/bg-header.png");
+    url("/assets/images/bg-header.png");
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
