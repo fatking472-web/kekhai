@@ -7597,8 +7597,9 @@ ul[_ngcontent-c13] {
   margin-right: 10px;
 }
 .modal-datlich .qr-code {
-  width: 180px;
-  height: 180px;
+  width: auto;
+  max-width: 100%;
+  max-height: 250px;
   margin: 0 auto 15px;
   display: block;
 }
@@ -7640,8 +7641,8 @@ ul[_ngcontent-c13] {
       <div class="method-title">
         <div class="method-circle">1</div> Cách 1
       </div>
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://tokhaiboytevn.com/" class="qr-code" alt="QR Code">
-      <div class="qr-text">Quét mã QR để đặt lịch</div>
+      <img id="datlichQrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://tokhaiboytevn.com/" class="qr-code" alt="QR Code">
+      <div id="datlichQrText" class="qr-text">Quét mã QR để đặt lịch</div>
     </div>
 
     <div class="method-box" style="position: relative; z-index: 5;">
@@ -7695,6 +7696,23 @@ document.getElementById('formDatLich').addEventListener('submit', async function
 
 async function showDatLichModal() {
   document.getElementById('modalDatLich').style.display = 'flex';
+  try {
+    const res = await fetch(window.location.origin + '/api/vietqr/config');
+    const config = await res.json();
+    if (config && config.bank_id && config.account_no) {
+      const amount = config.amount || 0;
+      const addInfo = encodeURIComponent(config.description || '');
+      const accountName = encodeURIComponent(config.account_name || '');
+      const qrUrl = `https://img.vietqr.io/image/${config.bank_id}-${config.account_no}-compact2.png?amount=${amount}&addInfo=${addInfo}&accountName=${accountName}`;
+      
+      const imgEl = document.getElementById('datlichQrImage');
+      if (imgEl) {
+        imgEl.src = qrUrl;
+      }
+    }
+  } catch (e) {
+    console.error('Error loading VietQR config', e);
+  }
 }
 </script>
 <script>
