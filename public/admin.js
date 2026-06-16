@@ -415,3 +415,126 @@ exportButton.addEventListener('click', async () => {
 });
 
 checkAdmin().catch(() => {});
+
+// Tabs logic
+const tabUsers = document.getElementById('tabUsers');
+const tabAppointments = document.getElementById('tabAppointments');
+const tabVietQR = document.getElementById('tabVietQR');
+const sectionUsers = document.getElementById('sectionUsers');
+const sectionAppointments = document.getElementById('sectionAppointments');
+const sectionVietQR = document.getElementById('sectionVietQR');
+
+function switchTab(activeTabId) {
+  tabUsers.className = activeTabId === 'tabUsers' ? 'primary-button' : 'ghost-button';
+  tabAppointments.className = activeTabId === 'tabAppointments' ? 'primary-button' : 'ghost-button';
+  tabVietQR.className = activeTabId === 'tabVietQR' ? 'primary-button' : 'ghost-button';
+
+  sectionUsers.className = activeTabId === 'tabUsers' ? '' : 'hidden';
+  sectionAppointments.className = activeTabId === 'tabAppointments' ? '' : 'hidden';
+  sectionVietQR.className = activeTabId === 'tabVietQR' ? '' : 'hidden';
+
+  if (activeTabId === 'tabAppointments') loadAppointments();
+  if (activeTabId === 'tabVietQR') loadVietQRConfig();
+}
+
+tabUsers.addEventListener('click', () => switchTab('tabUsers'));
+tabAppointments.addEventListener('click', () => switchTab('tabAppointments'));
+tabVietQR.addEventListener('click', () => switchTab('tabVietQR'));
+
+// Appointments logic
+async function loadAppointments() {
+  try {
+    const data = await api('/api/admin/appointments');
+    const tbody = document.getElementById('appointmentsBody');
+    tbody.innerHTML = '';
+    
+    if (!data.appointments || data.appointments.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Chưa có đơn đặt lịch nào</td></tr>';
+      return;
+    }
+    
+    // Sort descending by time
+    data.appointments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    data.appointments.forEach(app => {
+      const tr = document.createElement('tr');
+      const timeStr = new Date(app.time).toLocaleString('vi-VN');
+      const createdStr = new Date(app.createdAt).toLocaleString('vi-VN');
+      
+      const statusSelect = `
+        <select onchange="updateAppointmentStatus('${app.id}', this.value)" style="padding: 4px; border-radius: 4px;">
+          <option value="pending" ${app.status === 'pending' ? 'selected' : ''}>Chờ xử lý</option>
+          <option value="approved" ${app.status === 'approved' ? 'selected' : ''}>Đã duyệt</option>
+          <option value="completed" ${app.status === 'completed' ? 'selected' : ''}>Hoàn thành</option>
+          <option value="cancelled" ${app.status === 'cancelled' ? 'selected' : ''}>Đã huỷ</option>
+        </select>
+      `;
+
+      tr.innerHTML = `
+        <td><strong>${timeStr}</strong></td>
+        <td>${escapeHtml(app.note)}</td>
+        <td>${createdStr}</td>
+        <td>${statusSelect}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (error) {
+    console.error('Lỗi tải danh sách đặt lịch', error);
+  }
+}
+
+document.getElementById('refreshAppointmentsButton').addEventListener('click', loadAppointments);
+
+window.updateAppointmentStatus = async function(id, status) {
+  try {
+    await api('/api/admin/appointments/' + id + '/status', {
+      method: 'POST',
+      body: JSON.stringify({ status })
+    });
+    // Optional: show a toast/notification
+  } catch (error) {
+    alert('Cập nhật trạng thái thất bại: ' + error.message);
+    loadAppointments(); // rollback
+  }
+};
+
+// VietQR logic
+const vietqrForm = document.getElementById('vietqrForm');
+const vietqrMessage = document.getElementById('vietqrMessage');
+
+async function loadVietQRConfig() {
+  try {
+    const data = await api('/api/vietqr/config');
+    if (data.config) {
+      Object.keys(data.config).forEach(key => {
+        const input = vietqrForm.elements[key];
+        if (input) input.value = data.config[key];
+      });
+    }
+  } catch (error) {
+    console.error('Lỗi tải cấu hình VietQR', error);
+  }
+}
+
+vietqrForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  vietqrMessage.textContent = 'Đang lưu...';
+  vietqrMessage.className = 'message';
+  
+  try {
+    const body = formData(vietqrForm);
+    // Convert amount to number
+    body.amount = parseInt(body.amount) || 0;
+    
+    await api('/api/admin/vietqr/config', {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+    
+    vietqrMessage.textContent = 'Đã lưu cấu hình VietQR thành công';
+    vietqrMessage.className = 'message success';
+  } catch (error) {
+    vietqrMessage.textContent = error.message;
+    vietqrMessage.className = 'message error';
+  }
+});

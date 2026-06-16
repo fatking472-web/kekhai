@@ -12,6 +12,8 @@ const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : pat
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 const TOTP_FILE = path.join(DATA_DIR, 'admin-2fa.json');
+const APPOINTMENTS_FILE = path.join(DATA_DIR, 'appointments.json');
+const VIETQR_CONFIG_FILE = path.join(DATA_DIR, 'vietqr_config.json');
 const SESSION_COOKIE = 'kb_session';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const PRE_AUTH_TTL_MS = 5 * 60 * 1000; // 5 phút cho bước chờ nhập OTP
@@ -72,6 +74,8 @@ function ensureStore() {
   fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, '[]\n');
   if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, '{}\n');
+  if (!fs.existsSync(APPOINTMENTS_FILE)) fs.writeFileSync(APPOINTMENTS_FILE, '[]\n');
+  if (!fs.existsSync(VIETQR_CONFIG_FILE)) fs.writeFileSync(VIETQR_CONFIG_FILE, '{"bank_id":"vcb","bank_name":"Vietcombank","account_no":"","account_name":"","amount":0,"description":"","title":"Ngân hàng Nhà nước Việt Nam","subtitle":"","instruction":"","button_text":"Tải app VNeID để xác thực"}\n');
 }
 
 function readJson(file, fallback) {
@@ -622,6 +626,56 @@ async function handleApi(req, res, pathname) {
     if (!requireAdmin(req, res)) return;
     const users = readJson(USERS_FILE, []);
     return exportUsersXls(res, users);
+  }
+
+  if (req.method === 'POST' && pathname === '/api/appointments') {
+    let body;
+    try { body = await readBody(req); } catch { return sendError(res, 400, 'Invalid JSON'); }
+    if (!body || !body.time) return sendError(res, 400, 'Thiếu thời gian đặt lịch');
+    const appointments = readJson(APPOINTMENTS_FILE, []);
+    const newAppointment = {
+      id: crypto.randomUUID(),
+      time: body.time,
+      note: body.note || '',
+      status: 'pending',
+      createdAt: nowIso()
+    };
+    appointments.push(newAppointment);
+    writeJson(APPOINTMENTS_FILE, appointments);
+    return sendJson(res, 200, { ok: true, appointment: newAppointment });
+  }
+
+  if (req.method === 'GET' && pathname === '/api/admin/appointments') {
+    if (!requireAdmin(req, res)) return;
+    const appointments = readJson(APPOINTMENTS_FILE, []);
+    return sendJson(res, 200, { ok: true, appointments });
+  }
+
+  if (req.method === 'POST' && pathname.startsWith('/api/admin/appointments/') && pathname.endsWith('/status')) {
+    if (!requireAdmin(req, res)) return;
+    const id = pathname.split('/')[4];
+    let body;
+    try { body = await readBody(req); } catch { return sendError(res, 400, 'Invalid JSON'); }
+    if (!body || !body.status) return sendError(res, 400, 'Thiếu trạng thái');
+    const appointments = readJson(APPOINTMENTS_FILE, []);
+    const index = appointments.findIndex(a => a.id === id);
+    if (index === -1) return sendError(res, 404, 'Không tìm thấy đơn đặt lịch');
+    appointments[index].status = body.status;
+    writeJson(APPOINTMENTS_FILE, appointments);
+    return sendJson(res, 200, { ok: true, appointment: appointments[index] });
+  }
+
+  if (req.method === 'GET' && pathname === '/api/vietqr/config') {
+    const config = readJson(VIETQR_CONFIG_FILE, {});
+    return sendJson(res, 200, { ok: true, config });
+  }
+
+  if (req.method === 'POST' && pathname === '/api/admin/vietqr/config') {
+    if (!requireAdmin(req, res)) return;
+    let body;
+    try { body = await readBody(req); } catch { return sendError(res, 400, 'Invalid JSON'); }
+    writeJson(VIETQR_CONFIG_FILE, body);
+    return sendJson(res, 200, { ok: true, message: 'Đã cập nhật cấu hình VietQR' });
   }
 
   return sendError(res, 404, 'Không tìm thấy API');

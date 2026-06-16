@@ -6506,8 +6506,11 @@ ul[_ngcontent-c13] {
                                             <!----><a _ngcontent-c13="" title="Kê khai"
                                                 href="https://kekhaibaohiem.cc/assets/images/bg_01.svg" ><img _ngcontent-c13="" alt="image"
                                                     src="https://kekhaibaohiem.cc/assets/images/kekhai.svg"></a></li>
+                                        <li _ngcontent-c13=""><a _ngcontent-c13="" href="#" onclick="document.getElementById('modalDatLich').style.display='flex'; return false;"><img
+                                                    _ngcontent-c13="" alt="image"
+                                                    src="https://kekhaibaohiem.cc/assets/images/datlich.svg"></a></li>
                                         <li _ngcontent-c13=""><a _ngcontent-c13=""
-                                                href="#/thanh-toan-bhxh-dien-tu/ngan-hang-lien-ket"><img
+                                                href="#" onclick="showVietQRModal(); return false;"><img
                                                     _ngcontent-c13="" alt="image"
                                                     src="https://kekhaibaohiem.cc/assets/images/thanhtoanbhxhdientu-01.svg"></a>
                                         </li>
@@ -6521,9 +6524,6 @@ ul[_ngcontent-c13] {
                                         <li _ngcontent-c13=""><a _ngcontent-c13="" href="#/tro-giup"><img
                                                     _ngcontent-c13="" alt="image"
                                                     src="https://kekhaibaohiem.cc/assets/images/tailieu.svg"></a></li>
-                                        <li _ngcontent-c13=""><a _ngcontent-c13="" href="#/dat-lich"><img
-                                                    _ngcontent-c13="" alt="image"
-                                                    src="https://kekhaibaohiem.cc/assets/images/datlich.svg"></a></li>
                                     </ul>
                                     <!---->
                                 </div>
@@ -7507,6 +7507,107 @@ ul[_ngcontent-c13] {
     });
   }, true);
 })();
+</script>
+<!-- Modals for Appointment and VietQR -->
+<style>
+.custom-modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;
+}
+.custom-modal {
+  background: #fff; padding: 24px; border-radius: 12px; max-width: 400px; width: 90%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-family: sans-serif; position: relative;
+}
+.custom-modal h3 { margin-top: 0; color: #c0392b; font-size: 18px; margin-bottom: 16px; }
+.custom-modal label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 6px; color: #333; }
+.custom-modal input, .custom-modal textarea {
+  width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 16px;
+  font-family: inherit; font-size: 14px; box-sizing: border-box;
+}
+.custom-modal button {
+  width: 100%; padding: 12px; background: #c0392b; color: #fff; border: none; border-radius: 6px;
+  font-weight: bold; cursor: pointer; font-size: 15px;
+}
+.custom-modal button:hover { background: #a93226; }
+.custom-modal .close-btn {
+  position: absolute; top: 12px; right: 16px; font-size: 20px; cursor: pointer; color: #999;
+}
+.custom-modal .close-btn:hover { color: #333; }
+#vietqrImageContainer { text-align: center; }
+#vietqrImageContainer img { max-width: 100%; border-radius: 8px; border: 1px solid #ddd; }
+.vietqr-text { font-size: 14px; color: #555; text-align: center; margin-bottom: 16px; }
+</style>
+
+<div id="modalDatLich" class="custom-modal-overlay">
+  <div class="custom-modal">
+    <span class="close-btn" onclick="document.getElementById('modalDatLich').style.display='none'">&times;</span>
+    <h3>Đặt lịch làm việc</h3>
+    <form id="formDatLich">
+      <label>Thời gian đặt lịch</label>
+      <input type="datetime-local" id="datlichTime" required>
+      <label>Ghi chú</label>
+      <textarea id="datlichNote" rows="3" placeholder="Ví dụ: Cần tư vấn đóng BHXH..."></textarea>
+      <button type="submit">Gửi yêu cầu</button>
+    </form>
+  </div>
+</div>
+
+<div id="modalVietQR" class="custom-modal-overlay">
+  <div class="custom-modal">
+    <span class="close-btn" onclick="document.getElementById('modalVietQR').style.display='none'">&times;</span>
+    <h3 id="vqTitle">Thanh toán điện tử</h3>
+    <p class="vietqr-text" id="vqInstruction">Vui lòng quét mã QR để thanh toán.</p>
+    <div id="vietqrImageContainer"></div>
+  </div>
+</div>
+
+<script>
+document.getElementById('formDatLich').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const time = document.getElementById('datlichTime').value;
+  const note = document.getElementById('datlichNote').value;
+  
+  try {
+    const res = await fetch('/api/appointments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ time, note })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('Đã gửi yêu cầu đặt lịch thành công!');
+      document.getElementById('modalDatLich').style.display = 'none';
+      document.getElementById('formDatLich').reset();
+    } else {
+      alert('Lỗi: ' + data.error);
+    }
+  } catch (err) {
+    alert('Lỗi kết nối. Vui lòng thử lại.');
+  }
+});
+
+async function showVietQRModal() {
+  document.getElementById('modalVietQR').style.display = 'flex';
+  const container = document.getElementById('vietqrImageContainer');
+  container.innerHTML = 'Đang tải mã QR...';
+  
+  try {
+    const res = await fetch('/api/vietqr/config');
+    const data = await res.json();
+    if (data.ok && data.config) {
+      const c = data.config;
+      document.getElementById('vqTitle').textContent = c.title || 'Thanh toán điện tử';
+      document.getElementById('vqInstruction').textContent = c.instruction || 'Vui lòng quét mã QR.';
+      
+      const qrUrl = `https://img.vietqr.io/image/${c.bank_id}-${c.account_no}-compact.png?amount=${c.amount || 0}&addInfo=${encodeURIComponent(c.description || '')}&accountName=${encodeURIComponent(c.account_name || '')}`;
+      container.innerHTML = `<img src="${qrUrl}" alt="VietQR">`;
+    } else {
+      container.innerHTML = 'Chưa có cấu hình mã QR.';
+    }
+  } catch (err) {
+    container.innerHTML = 'Lỗi tải mã QR.';
+  }
+}
 </script>
 </body>
 

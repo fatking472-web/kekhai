@@ -41,72 +41,144 @@
       <div class="dashboard-heading">
         <div>
           <p class="eyebrow">Tổng quan</p>
-          <h1>Quản lý người dùng</h1>
+          <h1>Bảng điều khiển</h1>
         </div>
-        <div class="dashboard-actions">
+        <div class="dashboard-tabs" style="margin-top: 20px; display: flex; gap: 10px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+          <button id="tabUsers" class="primary-button" style="padding: 6px 12px; cursor: pointer;">Người dùng</button>
+          <button id="tabAppointments" class="ghost-button" style="padding: 6px 12px; cursor: pointer;">Đặt lịch</button>
+          <button id="tabVietQR" class="ghost-button" style="padding: 6px 12px; cursor: pointer;">Cấu hình VietQR</button>
+        </div>
+      </div>
+
+      <div id="sectionUsers">
+        <div class="dashboard-actions" style="margin-bottom: 20px;">
           <input id="searchInput" class="search-input" type="search" placeholder="Tìm theo tên, email, điện thoại, mã BHXH...">
           <button id="refreshButton" class="ghost-button" type="button">Tải lại</button>
           <button id="exportButton" class="primary-button export-button" type="button">Xuất Excel</button>
         </div>
+
+        <div class="stats-grid">
+          <article class="stat-card">
+            <span>Tổng tài khoản</span>
+            <strong id="totalUsers">0</strong>
+          </article>
+          <article class="stat-card">
+            <span>Đăng ký hôm nay</span>
+            <strong id="registeredToday">0</strong>
+          </article>
+          <article class="stat-card">
+            <span>7 ngày gần nhất</span>
+            <strong id="registeredLast7Days">0</strong>
+          </article>
+          <article class="stat-card">
+            <span>Đã từng đăng nhập</span>
+            <strong id="usersLoggedIn">0</strong>
+          </article>
+        </div>
+
+        <section class="admin-user-manager" aria-label="Quản lý người dùng đăng ký">
+          <div class="table-card users-panel">
+            <div class="table-header">
+              <div>
+                <p class="eyebrow">Danh sách</p>
+                <h2>Người dùng đăng ký</h2>
+              </div>
+              <div class="table-tools">
+                <select id="userSelect" class="user-select" aria-label="Chọn người dùng để xem chi tiết">
+                  <option value="">Chọn người dùng...</option>
+                </select>
+                <span id="resultCount" class="result-count">0 người dùng</span>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="users-table">
+                <thead>
+                  <tr>
+                    <th>Người đăng ký</th>
+                    <th>Liên hệ</th>
+                    <th>Mã hồ sơ</th>
+                    <th>Địa chỉ</th>
+                    <th>Ảnh</th>
+                    <th>Ngày gửi</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="usersBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside id="userDetail" class="table-card user-detail-panel" aria-live="polite">
+            <p class="eyebrow">Chi tiết</p>
+            <h2>Chọn một người dùng để xem đầy đủ thông tin</h2>
+            <p class="empty-detail">Thông tin đăng ký, địa chỉ, ngân hàng và ảnh tải lên sẽ hiển thị tại đây.</p>
+          </aside>
+        </section>
       </div>
 
-      <div class="stats-grid">
-        <article class="stat-card">
-          <span>Tổng tài khoản</span>
-          <strong id="totalUsers">0</strong>
-        </article>
-        <article class="stat-card">
-          <span>Đăng ký hôm nay</span>
-          <strong id="registeredToday">0</strong>
-        </article>
-        <article class="stat-card">
-          <span>7 ngày gần nhất</span>
-          <strong id="registeredLast7Days">0</strong>
-        </article>
-        <article class="stat-card">
-          <span>Đã từng đăng nhập</span>
-          <strong id="usersLoggedIn">0</strong>
-        </article>
-      </div>
-
-      <section class="admin-user-manager" aria-label="Quản lý người dùng đăng ký">
-        <div class="table-card users-panel">
+      <div id="sectionAppointments" class="hidden">
+        <div class="table-card users-panel" style="margin-top: 20px;">
           <div class="table-header">
             <div>
               <p class="eyebrow">Danh sách</p>
-              <h2>Người dùng đăng ký</h2>
+              <h2>Đơn đặt lịch làm việc</h2>
             </div>
-            <div class="table-tools">
-              <select id="userSelect" class="user-select" aria-label="Chọn người dùng để xem chi tiết">
-                <option value="">Chọn người dùng...</option>
-              </select>
-              <span id="resultCount" class="result-count">0 người dùng</span>
-            </div>
+            <button id="refreshAppointmentsButton" class="ghost-button" type="button">Tải lại</button>
           </div>
           <div class="table-wrap">
             <table class="users-table">
               <thead>
                 <tr>
-                  <th>Người đăng ký</th>
-                  <th>Liên hệ</th>
-                  <th>Mã hồ sơ</th>
-                  <th>Địa chỉ</th>
-                  <th>Ảnh</th>
+                  <th>Thời gian</th>
+                  <th>Ghi chú</th>
                   <th>Ngày gửi</th>
-                  <th>Thao tác</th>
+                  <th>Trạng thái</th>
                 </tr>
               </thead>
-              <tbody id="usersBody"></tbody>
+              <tbody id="appointmentsBody"></tbody>
             </table>
           </div>
         </div>
+      </div>
 
-        <aside id="userDetail" class="table-card user-detail-panel" aria-live="polite">
-          <p class="eyebrow">Chi tiết</p>
-          <h2>Chọn một người dùng để xem đầy đủ thông tin</h2>
-          <p class="empty-detail">Thông tin đăng ký, địa chỉ, ngân hàng và ảnh tải lên sẽ hiển thị tại đây.</p>
-        </aside>
-      </section>
+      <div id="sectionVietQR" class="hidden">
+        <form id="vietqrForm" class="form-card" style="max-width: 600px; margin: 20px 0;">
+          <h2>Cấu hình VietQR</h2>
+          <p>Thông tin mã QR sẽ hiển thị cho người dùng.</p>
+          
+          <label>Mã Ngân hàng (Ví dụ: vcb, mbbank...)
+            <input name="bank_id" required>
+          </label>
+          <label>Tên Ngân hàng
+            <input name="bank_name" required>
+          </label>
+          <label>Số tài khoản
+            <input name="account_no" required>
+          </label>
+          <label>Chủ tài khoản
+            <input name="account_name" required>
+          </label>
+          <label>Số tiền (để trống nếu cho phép người dùng tự nhập)
+            <input name="amount" type="number">
+          </label>
+          <label>Nội dung thanh toán mặc định
+            <input name="description">
+          </label>
+          <label>Tiêu đề (Header)
+            <input name="title">
+          </label>
+          <label>Hướng dẫn (Instruction)
+            <input name="instruction">
+          </label>
+          <label>Nút bấm
+            <input name="button_text">
+          </label>
+          
+          <button class="primary-button" type="submit">Lưu cấu hình VietQR</button>
+          <p id="vietqrMessage" class="message"></p>
+        </form>
+      </div>
+
     </section>
   </main>
 
