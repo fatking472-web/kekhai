@@ -1,7 +1,4 @@
-const adminLogin = document.getElementById('adminLogin');
 const dashboard = document.getElementById('dashboard');
-const adminLoginForm = document.getElementById('adminLoginForm');
-const adminMessage = document.getElementById('adminMessage');
 const usersBody = document.getElementById('usersBody');
 const adminLogout = document.getElementById('adminLogout');
 const refreshButton = document.getElementById('refreshButton');
@@ -36,8 +33,7 @@ const uploadLabels = {
 };
 
 function setAdminMessage(text, type = '') {
-  adminMessage.textContent = text;
-  adminMessage.className = `message ${type}`.trim();
+  if (text) alert(text);
 }
 
 async function api(path, options = {}) {
@@ -321,32 +317,23 @@ async function loadDashboard() {
   allUsers = usersData.users.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   renderStats(statsData.stats);
   renderUsers();
-  adminLogin.classList.add('hidden');
+  renderUsers();
   dashboard.classList.remove('hidden');
   adminLogout.classList.remove('hidden');
 }
 
 async function checkAdmin() {
-  const data = await api('/api/me');
-  if (data.principal?.role === 'admin') {
-    await loadDashboard();
+  try {
+    const data = await api('/api/me');
+    if (data.principal?.role === 'admin') {
+      await loadDashboard();
+    } else {
+      window.location.href = '/admin-login.html';
+    }
+  } catch {
+    window.location.href = '/admin-login.html';
   }
 }
-
-adminLoginForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  setAdminMessage('Đang đăng nhập...');
-  try {
-    await api('/api/admin/login', {
-      method: 'POST',
-      body: JSON.stringify(formData(adminLoginForm))
-    });
-    setAdminMessage('');
-    await loadDashboard();
-  } catch (error) {
-    setAdminMessage(error.message, 'error');
-  }
-});
 
 refreshButton.addEventListener('click', () => {
   loadDashboard().catch((error) => setAdminMessage(error.message, 'error'));

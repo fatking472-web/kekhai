@@ -7712,7 +7712,7 @@ async function showDatLichModal() {
           window.isLoggedIn = true;
           var authNav = document.querySelector('.sub-nav');
           if (authNav) {
-            authNav.innerHTML = '<a href="#" style="color:white; display:flex; align-items:center; text-decoration:none; padding: 0 15px;"><img src="https://kekhaibaohiem.cc/assets/images/user_name.svg" style="width:20px; filter:brightness(0) invert(1); margin-right:8px;"> <span style="font-size: 14px;">Tài khoản (' + data.principal.id + ')</span></a> <a href="#" onclick="logoutUser(event)" style="color:#ffcccc; margin-left:15px; text-decoration:none; font-size: 14px; padding: 0 15px; border-left: 1px solid rgba(255,255,255,0.3);">Đăng xuất</a>';
+            authNav.innerHTML = '<a href="javascript:void(0)" style="color:white; display:flex; align-items:center; text-decoration:none; padding: 0 15px;"><img src="https://kekhaibaohiem.cc/assets/images/user_name.svg" style="width:20px; filter:brightness(0) invert(1); margin-right:8px;"> <span style="font-size: 14px;">Tài khoản (' + data.principal.id + ')</span></a> <a href="javascript:void(0)" onclick="logoutUser(event)" style="color:#ffcccc; margin-left:15px; text-decoration:none; font-size: 14px; padding: 0 15px; border-left: 1px solid rgba(255,255,255,0.3);">Đăng xuất</a>';
             authNav.style.display = 'flex';
             authNav.style.alignItems = 'center';
           }
