@@ -712,7 +712,7 @@ document.getElementById('login-form').addEventListener('submit', async function(
   const p = document.getElementById('password').value;
 
   try {
-    const res = await fetch('/api/admin/login', {
+    const res = await fetch(window.location.origin + '/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: u, password: p })
@@ -763,7 +763,7 @@ document.getElementById('setup-form').addEventListener('submit', async function(
   }
 
   try {
-    const res = await fetch('/api/admin/verify-2fa', {
+    const res = await fetch(window.location.origin + '/api/admin/verify-2fa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ totp, preAuthToken, confirmSetup: true })
@@ -800,7 +800,7 @@ document.getElementById('totp-form').addEventListener('submit', async function(e
   }
 
   try {
-    const res = await fetch('/api/admin/verify-2fa', {
+    const res = await fetch(window.location.origin + '/api/admin/verify-2fa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ totp, preAuthToken })
@@ -884,7 +884,7 @@ document.getElementById('reset-form').addEventListener('submit', async function(
   const emergencyCode = document.getElementById('reset-emergency').value.trim();
 
   try {
-    const res = await fetch('/api/admin/reset-2fa', {
+    const res = await fetch(window.location.origin + '/api/admin/reset-2fa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password, emergencyCode })
