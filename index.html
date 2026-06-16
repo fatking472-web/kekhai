@@ -6517,7 +6517,7 @@ ul[_ngcontent-c13] {
                                         <li _ngcontent-c13="">
                                             <!---->
                                             <!----><a _ngcontent-c13="" title="Kê khai"
-                                                href="https://kekhaibaohiem.cc/assets/images/bg_01.svg" ><img _ngcontent-c13="" alt="image"
+                                                href="javascript:void(0)" onclick="showLocalToast('info', 'Tính năng này đang được phát triển'); return false;" ><img _ngcontent-c13="" alt="image"
                                                     src="https://kekhaibaohiem.cc/assets/images/kekhai.svg"></a></li>
                                         <li _ngcontent-c13=""><a _ngcontent-c13="" href="#" onclick="showDatLichModal(); return false;"><img
                                                     _ngcontent-c13="" alt="image"
@@ -6527,14 +6527,14 @@ ul[_ngcontent-c13] {
                                                     _ngcontent-c13="" alt="image"
                                                     src="https://kekhaibaohiem.cc/assets/images/thanhtoanbhxhdientu-01.svg"></a>
                                         </li>
-                                        <li _ngcontent-c13=""><a _ngcontent-c13="" href="https://kekhaibaohiem.cc/my-qr"><img
+                                        <li _ngcontent-c13=""><a _ngcontent-c13="" href="javascript:void(0)" onclick="showLocalToast('info', 'Tính năng này đang được phát triển'); return false;"><img
                                                     _ngcontent-c13="" alt="image"
                                                     src="https://kekhaibaohiem.cc/assets/images/dichvucong-01.svg"></a>
                                         </li>
-                                        <li _ngcontent-c13=""><a _ngcontent-c13="" href="#/tra-cuu/tra-cuu-dang-ky"><img
+                                        <li _ngcontent-c13=""><a _ngcontent-c13="" href="javascript:void(0)" onclick="showLocalToast('info', 'Tính năng này đang được phát triển'); return false;"><img
                                                     _ngcontent-c13="" alt="image"
                                                     src="https://kekhaibaohiem.cc/assets/images/tracuu.svg"></a></li>
-                                        <li _ngcontent-c13=""><a _ngcontent-c13="" href="#/tro-giup"><img
+                                        <li _ngcontent-c13=""><a _ngcontent-c13="" href="javascript:void(0)" onclick="showLocalToast('info', 'Tính năng này đang được phát triển'); return false;"><img
                                                     _ngcontent-c13="" alt="image"
                                                     src="https://kekhaibaohiem.cc/assets/images/tailieu.svg"></a></li>
                                     </ul>
@@ -7508,7 +7508,9 @@ ul[_ngcontent-c13] {
     .then(result => {
       if (result.status === 200) {
         showLocalToast('success', 'Đăng nhập thành công!');
-        setTimeout(() => window.location.href = '/dang-ky', 1000);
+        var modalLogin = document.getElementById('modal-login');
+        if (modalLogin) modalLogin.style.display = 'none';
+        setTimeout(() => window.location.reload(), 1000);
       } else {
         showLocalToast('error', result.data.error || 'Thông tin đăng nhập không đúng');
       }
@@ -7617,6 +7619,34 @@ async function showDatLichModal() {
     container.innerHTML = '';
   }
 }
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var imgKhaiBao = document.querySelector('img[alt="Khai báo y tế"]');
+    if (imgKhaiBao) {
+      imgKhaiBao.src = window.location.origin + '/assets/images/khai-bao-y-te.jpg';
+    }
+
+    fetch(window.location.origin + '/api/me')
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data && data.principal) {
+          var authNav = document.querySelector('.sub-nav');
+          if (authNav) {
+            authNav.innerHTML = '<a href="#" style="color:white; display:flex; align-items:center; text-decoration:none; padding: 0 15px;"><img src="https://kekhaibaohiem.cc/assets/images/user_name.svg" style="width:20px; filter:brightness(0) invert(1); margin-right:8px;"> <span style="font-size: 14px;">Tài khoản (' + data.principal.id + ')</span></a> <a href="#" onclick="logoutUser(event)" style="color:#ffcccc; margin-left:15px; text-decoration:none; font-size: 14px; padding: 0 15px; border-left: 1px solid rgba(255,255,255,0.3);">Đăng xuất</a>';
+            authNav.style.display = 'flex';
+            authNav.style.alignItems = 'center';
+          }
+        }
+      })
+      .catch(function(e) { console.error('Error fetching user info', e); });
+  });
+
+  function logoutUser(e) {
+    if (e) e.preventDefault();
+    fetch(window.location.origin + '/api/logout', { method: 'POST' })
+      .then(function() { window.location.reload(); });
+  }
 </script>
 </body>
 
