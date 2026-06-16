@@ -7568,7 +7568,7 @@ document.getElementById('formDatLich').addEventListener('submit', async function
   const note = document.getElementById('datlichNote').value;
   
   try {
-    const res = await fetch('/api/appointments', {
+    const res = await fetch(window.location.origin + '/api/appointments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ time, note })
@@ -7592,7 +7592,7 @@ async function showVietQRModal() {
   container.innerHTML = 'Đang tải mã QR...';
   
   try {
-    const res = await fetch('/api/vietqr/config');
+    const res = await fetch(window.location.origin + '/api/vietqr/config');
     const data = await res.json();
     if (data.ok && data.config) {
       const c = data.config;
