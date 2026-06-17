@@ -220,7 +220,7 @@ function renderUserDetail(user) {
 
     <h3>Địa chỉ liên hệ</h3>
     <div class="detail-grid">
-      ${detailItem('Tỉnh/Thành phố', user.province)}
+      ${detailItem('Địa chỉ liên hệ', user.province)}
       ${detailItem('Quận/Huyện', user.district)}
       ${detailItem('Phường/Xã', user.ward)}
       ${detailItem('Địa chỉ chi tiết', user.address)}
