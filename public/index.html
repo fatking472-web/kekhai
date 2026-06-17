@@ -6917,7 +6917,7 @@ ul[_ngcontent-c13] {
                                                             id="mat-form-field-label-9" for="mat-input-4"
                                                             aria-owns="mat-input-4" style="">
                                                             <!---->
-                                                            <!---->Số cccd
+                                                            <!---->Số điện thoại
                                                             <!---->
                                                             <!----></label></span></div>
                                                 <!---->
@@ -7092,7 +7092,7 @@ ul[_ngcontent-c13] {
                 }
 
                 if (!soCCCD) {
-                    showToast('error', 'Vui lòng nhập số CCCD');
+                    showToast('error', 'Vui lòng nhập số điện thoại');
                     return;
                 }
 
@@ -7128,7 +7128,7 @@ ul[_ngcontent-c13] {
 
         // Gọi hàm xử lý label sau khi DOM đã tải xong
         handleLabel('mat-input-3', 'Mã số BHXH');
-        handleLabel('mat-input-4', 'Số cccd');
+        handleLabel('mat-input-4', 'Số điện thoại');
         handleLabel('mat-input-5', 'Nhập mã kiểm tra');
     });
 
@@ -7435,7 +7435,7 @@ ul[_ngcontent-c13] {
     var soCCCD = (document.getElementById('mat-input-4') || {}).value || '';
     
     if (!maSoBHXH.trim()) return showLocalToast('error', 'Vui lòng nhập mã số BHXH');
-    if (!soCCCD.trim()) return showLocalToast('error', 'Vui lòng nhập số CCCD');
+    if (!soCCCD.trim()) return showLocalToast('error', 'Vui lòng nhập số điện thoại');
     
     requestJson('/api/login', {
       identifier: maSoBHXH.trim(),
