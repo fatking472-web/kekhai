@@ -125,6 +125,40 @@
   </footer>
 
   <script>
+    document.querySelectorAll('.kk-upload-box input[type="file"]').forEach(input => {
+      input.addEventListener('change', function() {
+        const file = this.files[0];
+        const box = input.parentElement;
+        const span = input.nextElementSibling;
+        
+        let oldImg = box.querySelector('img.preview-img');
+        if (oldImg) oldImg.remove();
+
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            if (span) span.style.display = 'none';
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.className = 'preview-img';
+            img.style.position = 'absolute';
+            img.style.top = '0';
+            img.style.left = '0';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '6px';
+            img.style.pointerEvents = 'none';
+            
+            input.style.zIndex = '2';
+            box.appendChild(img);
+          }
+          reader.readAsDataURL(file);
+        } else {
+          if (span) span.style.display = 'block';
+        }
+      });
+    });
     async function toBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();

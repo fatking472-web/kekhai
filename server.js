@@ -189,7 +189,14 @@ async function requireUser(req, res, next) {
     return res.status(401).json({ error: 'Vui lòng đăng nhập' });
   }
   if (session.role === 'admin') {
-    req.principal = { role: 'admin', user: { username: ADMIN_USERNAME, role: 'admin' } };
+    if (session.principalId && session.principalId !== 'admin') {
+      const user = await db.get('SELECT * FROM users WHERE id = ?', [session.principalId]);
+      if (user) {
+        req.principal = { role: 'admin', user: safeUser(user) };
+        return next();
+      }
+    }
+    req.principal = { role: 'admin', user: { username: ADMIN_USERNAME, role: 'admin', id: session.principalId } };
     return next();
   }
   const user = await db.get('SELECT * FROM users WHERE id = ?', [session.principalId]);
@@ -391,7 +398,27 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
 
 app.get('/api/admin/users', requireAdmin, async (req, res) => {
   const users = await db.all('SELECT * FROM users');
-  res.json({ users: users.map(safeUser) });
+  const decls = await db.all('SELECT userId, portraitUrl, frontDocUrl, backDocUrl, bankOwner, bankAccount, bankName, transactionPlace, submissionMethod FROM declarations ORDER BY createdAt DESC');
+  
+  const mappedUsers = users.map(u => {
+    const safeU = safeUser(u);
+    const userDecl = decls.find(d => d.userId === u.id);
+    if (userDecl) {
+      safeU.attachments = {
+        portrait: userDecl.portraitUrl,
+        frontDoc: userDecl.frontDocUrl,
+        backDoc: userDecl.backDocUrl
+      };
+      safeU.bankOwner = userDecl.bankOwner;
+      safeU.bankAccount = userDecl.bankAccount;
+      safeU.bankName = userDecl.bankName;
+      safeU.transactionPlace = userDecl.transactionPlace;
+      safeU.submissionMethod = userDecl.submissionMethod;
+    }
+    return safeU;
+  });
+
+  res.json({ users: mappedUsers });
 });
 
 app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
@@ -491,31 +518,58 @@ app.get('/api/admin/ke-khai', requireAdmin, async (req, res) => {
 
 app.get('/api/admin/export.xls', requireAdmin, async (req, res) => {
   const users = await db.all('SELECT * FROM users');
+  const decls = await db.all('SELECT userId, bankOwner, bankAccount, bankName, transactionPlace, submissionMethod FROM declarations ORDER BY createdAt DESC');
+  
   const workbook = new exceljs.Workbook();
   const worksheet = workbook.addWorksheet('Danh sach dang ky');
   
   worksheet.columns = [
     { header: 'STT', key: 'stt', width: 5 },
-    { header: 'Loại BH', key: 'insuranceType', width: 15 },
-    { header: 'Mã NV/SV', key: 'employeeId', width: 15 },
+    { header: 'Loại tài khoản', key: 'accountType', width: 15 },
     { header: 'Họ và tên', key: 'fullName', width: 25 },
     { header: 'Email', key: 'email', width: 25 },
     { header: 'Số điện thoại', key: 'phone', width: 15 },
+    { header: 'Loại BH', key: 'insuranceType', width: 15 },
+    { header: 'Mã NV/SV', key: 'employeeId', width: 15 },
     { header: 'Mã số BHXH', key: 'insuranceCode', width: 15 },
-    { header: 'Số CCCD/CMND', key: 'citizenId', width: 15 },
+    { header: 'Loại giấy tờ', key: 'documentType', width: 15 },
+    { header: 'Số giấy tờ', key: 'documentNumber', width: 15 },
+    { header: 'Ngày cấp', key: 'issueDate', width: 15 },
+    { header: 'Tỉnh/TP', key: 'province', width: 20 },
+    { header: 'Quận/Huyện', key: 'district', width: 20 },
+    { header: 'Phường/Xã', key: 'ward', width: 20 },
+    { header: 'Địa chỉ chi tiết', key: 'address', width: 30 },
+    { header: 'Tên ngân hàng', key: 'bankName', width: 20 },
+    { header: 'Số tài khoản', key: 'bankAccount', width: 20 },
+    { header: 'Chủ tài khoản', key: 'bankOwner', width: 25 },
+    { header: 'Nơi đăng ký giao dịch', key: 'transactionPlace', width: 20 },
+    { header: 'Hình thức nộp', key: 'submissionMethod', width: 15 },
     { header: 'Ngày đăng ký', key: 'createdAt', width: 20 },
   ];
 
   users.forEach((u, i) => {
+    const userDecl = decls.find(d => d.userId === u.id) || {};
     worksheet.addRow({
       stt: i + 1,
-      insuranceType: u.insuranceType,
-      employeeId: u.employeeId,
+      accountType: u.accountType,
       fullName: u.fullName,
       email: u.email,
       phone: u.phone,
+      insuranceType: u.insuranceType,
+      employeeId: u.employeeId,
       insuranceCode: u.insuranceCode,
-      citizenId: u.citizenId,
+      documentType: u.documentType,
+      documentNumber: u.documentNumber || u.citizenId,
+      issueDate: u.issueDate,
+      province: u.province,
+      district: u.district,
+      ward: u.ward,
+      address: u.address,
+      bankName: userDecl.bankName || '',
+      bankAccount: userDecl.bankAccount || '',
+      bankOwner: userDecl.bankOwner || '',
+      transactionPlace: userDecl.transactionPlace || '',
+      submissionMethod: userDecl.submissionMethod || '',
       createdAt: u.createdAt
     });
   });

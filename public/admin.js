@@ -289,7 +289,7 @@ function detailItem(label, value) {
 function renderUploads(user) {
   const uploads = Object.entries(uploadLabels)
     .map(([key, label]) => ({ key, label, upload: getUpload(user, key) }))
-    .filter((item) => item.upload?.dataUrl && /^data:image\/(png|jpe?g|webp);base64,/i.test(item.upload.dataUrl));
+    .filter((item) => item.upload && item.upload.dataUrl);
 
   if (!uploads.length) {
     return '<p class="empty-detail">Người dùng này chưa có ảnh tải lên.</p>';
@@ -298,7 +298,7 @@ function renderUploads(user) {
   return `
     <div class="upload-gallery">
       ${uploads.map(({ label, upload }) => `
-        <a class="upload-card" href="${escapeAttr(upload.dataUrl)}" target="_blank" rel="noopener">
+        <a class="upload-card" href="#" onclick="showImageModal(event, '${escapeAttr(upload.dataUrl)}')">
           <img src="${escapeAttr(upload.dataUrl)}" alt="${escapeAttr(label)}">
           <span>${escapeHtml(label)}</span>
         </a>
@@ -472,11 +472,9 @@ async function loadDeclarations() {
       const tr = document.createElement('tr');
       
       const imgs = [];
-      if (decl.images) {
-        if (decl.images.portrait) imgs.push(`<a href="#" onclick="showImageModal(event, '${decl.images.portrait}')">Chân dung</a>`);
-        if (decl.images.front) imgs.push(`<a href="#" onclick="showImageModal(event, '${decl.images.front}')">Mặt trước</a>`);
-        if (decl.images.back) imgs.push(`<a href="#" onclick="showImageModal(event, '${decl.images.back}')">Mặt sau</a>`);
-      }
+      if (decl.portraitUrl) imgs.push(`<a href="#" onclick="showImageModal(event, '${decl.portraitUrl}')">Chân dung</a>`);
+      if (decl.frontDocUrl) imgs.push(`<a href="#" onclick="showImageModal(event, '${decl.frontDocUrl}')">Mặt trước</a>`);
+      if (decl.backDocUrl) imgs.push(`<a href="#" onclick="showImageModal(event, '${decl.backDocUrl}')">Mặt sau</a>`);
       
       tr.innerHTML = `
         <td>
