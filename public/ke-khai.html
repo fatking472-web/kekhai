@@ -147,33 +147,15 @@
       const frontFile = fileInputs[1].files[0];
       const backFile = fileInputs[2].files[0];
 
-      let images = {};
-      try {
-        if (portraitFile) images.portrait = await toBase64(portraitFile);
-        if (frontFile) images.front = await toBase64(frontFile);
-        if (backFile) images.back = await toBase64(backFile);
-      } catch (err) {
-        alert('Lỗi đọc file ảnh. Vui lòng thử lại.');
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-        return;
-      }
-
       const formData = new FormData(e.target);
-      const data = {
-        bankOwner: formData.get('bankOwner'),
-        bankAccount: formData.get('bankAccount'),
-        bankName: formData.get('bankName'),
-        transactionPlace: formData.get('transactionPlace'),
-        submissionMethod: formData.get('submissionMethod'),
-        images: images
-      };
+      if (portraitFile) formData.append('portrait', portraitFile);
+      if (frontFile) formData.append('frontDoc', frontFile);
+      if (backFile) formData.append('backDoc', backFile);
 
       try {
         const res = await fetch('/api/ke-khai', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
+          body: formData
         });
         const result = await res.json();
         if (res.ok && result.ok) {

