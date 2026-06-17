@@ -7573,12 +7573,13 @@ ul[_ngcontent-c13] {
 </style>
 
 <div id="modalDatLich" class="custom-modal-overlay">
-  <div class="custom-modal modal-datlich" id="modalDatLichInner" style="width: 500px; max-width: 90%; padding: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-radius: 12px; overflow: hidden; background-color: transparent;">
-    <span class="close-btn" onclick="document.getElementById('modalDatLich').style.display='none'" style="position: absolute; top: 10px; right: 15px; font-size: 32px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); cursor: pointer; border: none; background: transparent; z-index: 20;">&times;</span>
-    <div id="vietqrDownloadContainer" style="position: relative; width: 100%; height: 60vh; max-height: 450px; background-size: contain; background-repeat: no-repeat; background-position: center; background-color: #f8f9fa;">
-      <img id="vietqrGeneratedCode" src="" style="position: absolute; top: 54%; left: 50%; transform: translate(-50%, -50%); height: 38%; max-height: 200px; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border-radius: 8px; z-index: 10; background: #fff; padding: 6px;">
+  <div class="custom-modal modal-datlich" id="modalDatLichInner" style="width: auto; max-width: 90%; padding: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-radius: 12px; overflow: hidden; background-color: transparent; display: flex; flex-direction: column; align-items: center;">
+    <span class="close-btn" onclick="document.getElementById('modalDatLich').style.display='none'" style="position: absolute; top: 10px; right: 15px; font-size: 32px; color: #888; text-shadow: 0 1px 2px rgba(255,255,255,0.8); cursor: pointer; border: none; background: transparent; z-index: 20;">&times;</span>
+    <div id="vietqrDownloadContainer" style="position: relative; max-width: 100%; display: flex; justify-content: center; align-items: center; background-color: #fff;">
+      <img id="vietqrBackgroundImage" src="" style="display: block; max-height: 70vh; max-width: 100%; object-fit: contain;">
+      <img id="vietqrGeneratedCode" src="" style="position: absolute; top: 53%; left: 50%; transform: translate(-50%, -50%); height: 25%; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border-radius: 8px; z-index: 10; background: #fff; padding: 6px;">
     </div>
-    <div style="padding: 15px; background: #fff; text-align: center;">
+    <div style="padding: 15px; background: #fff; text-align: center; width: 100%; box-sizing: border-box;">
       <button onclick="downloadVietQR()" style="background: #1083ff; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;">
         <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
         Tải ảnh Tích hợp điện tử
@@ -7632,11 +7633,8 @@ async function showDatLichModal() {
     const configData = await configRes.json();
     const globalConfig = configData.config || {};
     
-    // Set background image
-    const bgImage = globalConfig.background_image || 'qr1 (1).jpg';
-    container.style.backgroundImage = 'url(' + window.location.origin + '/assets/images/' + bgImage + ')';
-    // Save info for canvas rendering
-    container.dataset.bgImage = bgImage;
+    // Default background image
+    let bgImage = globalConfig.background_image || 'qr1 (1).jpg';
 
     // 2. Lấy thông tin user hiện tại
     const meRes = await fetch(window.location.origin + '/api/me');
@@ -7645,12 +7643,14 @@ async function showDatLichModal() {
     
     let qrUrl = '';
     
-    if (user && user.customQrConfig && user.customQrConfig.qrType === 'image' && user.customQrConfig.dataUrl) {
+    const userQrType = (user && user.customQrConfig) ? (user.customQrConfig.qrType || user.customQrConfig.type) : null;
+    
+    if (userQrType === 'image' && user.customQrConfig.dataUrl) {
       qrUrl = user.customQrConfig.dataUrl;
     } else {
       let qrConfig = globalConfig;
       // Dùng cấu hình riêng của user nếu có
-      if (user && user.customQrConfig && user.customQrConfig.qrType === 'vietqr') {
+      if (userQrType === 'vietqr') {
         qrConfig = {
           bank_id: user.customQrConfig.bankId || globalConfig.bank_id,
           account_no: user.customQrConfig.accountNo || globalConfig.account_no,
@@ -7658,6 +7658,9 @@ async function showDatLichModal() {
           description: user.customQrConfig.description || globalConfig.description,
           account_name: user.customQrConfig.accountName || globalConfig.account_name,
         };
+        if (user.customQrConfig.background_image) {
+          bgImage = user.customQrConfig.background_image;
+        }
       }
 
       if (qrConfig.bank_id && qrConfig.account_no) {
@@ -7665,13 +7668,59 @@ async function showDatLichModal() {
         let descStr = qrConfig.description ? '&addInfo=' + encodeURIComponent(qrConfig.description) : '';
         let nameStr = qrConfig.account_name ? '&accountName=' + encodeURIComponent(qrConfig.account_name) : '';
         
-        qrUrl = `https://img.vietqr.io/image/${qrConfig.bank_id}-${qrConfig.account_no}-qr_only.png?${amountStr}${descStr}${nameStr}`;
+        let defaultQrUrl = `https://img.vietqr.io/image/${qrConfig.bank_id}-${qrConfig.account_no}-qr_only.png?${amountStr}${descStr}${nameStr}`;
+        qrUrl = defaultQrUrl;
+
+        try {
+          const banksRes = await fetch('https://api.vietqr.io/v2/banks');
+          const banksData = await banksRes.json();
+          const qBId = String(qrConfig.bank_id).toLowerCase();
+          const bank = banksData.data.find(b => 
+            (b.code && b.code.toLowerCase() === qBId) || 
+            (b.shortName && b.shortName.toLowerCase() === qBId) || 
+            b.bin === qBId || 
+            (b.short_name && b.short_name.toLowerCase() === qBId)
+          );
+          
+          if (bank) {
+            let accName = qrConfig.account_name || "TAI KHOAN";
+            accName = accName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toUpperCase().replace(/[^A-Z0-9\s]/g, "").trim();
+            if (accName.length < 5) accName = accName + " TKNH";
+            if (accName.length > 50) accName = accName.substring(0, 50);
+
+            const genRes = await fetch('https://api.vietqr.io/v2/generate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                accountNo: qrConfig.account_no,
+                accountName: accName,
+                acqId: bank.bin,
+                amount: qrConfig.amount ? parseInt(qrConfig.amount) : 0,
+                addInfo: qrConfig.description,
+                format: 'text',
+                template: 'qr_only'
+              })
+            });
+            const genData = await genRes.json();
+            if (genData.code === '00' && genData.data && genData.data.qrCode) {
+              qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=' + encodeURIComponent(genData.data.qrCode);
+            } else {
+              console.error('VietQR error:', genData);
+            }
+          }
+        } catch(e) {
+          console.error('Lỗi lấy mã QR chuẩn:', e);
+        }
       } else {
         // Fallback default token
         qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://tokhaiboytevn.com/';
       }
     }
     
+    // Apply background image
+    document.getElementById('vietqrBackgroundImage').src = window.location.origin + '/assets/images/' + bgImage;
+    container.dataset.bgImage = bgImage;
+
     qrImg.crossOrigin = "Anonymous"; // Ensure cross-origin for canvas
     qrImg.src = qrUrl;
     qrImg.onload = () => {
@@ -7703,10 +7752,10 @@ function downloadVietQR() {
     ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
     
     // Calculate QR position (center)
-    let qrSize = Math.min(canvas.width * 0.42, 600); 
+    let qrSize = canvas.height * 0.25; 
     const qrX = (canvas.width - qrSize) / 2;
-    // Di chuyển tâm QR xuống vị trí 54% của ảnh nền để khớp với khoảng trống thực tế
-    const qrY = canvas.height * 0.54 - (qrSize / 2);
+    // Di chuyển tâm QR xuống vị trí 53% của ảnh nền để khớp với khoảng trống thực tế
+    const qrY = canvas.height * 0.53 - (qrSize / 2);
     
     // Background trắng cho QR để dễ quét
     ctx.fillStyle = "white";

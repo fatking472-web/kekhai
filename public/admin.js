@@ -612,7 +612,8 @@ function openUserQrModal(userId) {
   document.getElementById('userQrForm').reset();
   
   const qrConfig = user.customQrConfig || {};
-  if (qrConfig.type === 'image') {
+  const currentQrType = qrConfig.qrType || qrConfig.type;
+  if (currentQrType === 'image') {
     document.querySelector('input[name="qrType"][value="image"]').checked = true;
     document.getElementById('qrImageDataUrl').value = qrConfig.dataUrl || '';
     document.getElementById('qrImagePreview').src = qrConfig.dataUrl || '';
@@ -625,6 +626,7 @@ function openUserQrModal(userId) {
     form.elements['accountName'].value = qrConfig.accountName || '';
     form.elements['amount'].value = qrConfig.amount || '';
     form.elements['description'].value = qrConfig.description || '';
+    form.elements['background_image'].value = qrConfig.background_image || 'qr1 (1).jpg';
     document.getElementById('qrImagePreview').src = '';
     document.getElementById('qrImagePreview').style.display = 'none';
     document.getElementById('qrImageDataUrl').value = '';
@@ -667,7 +669,7 @@ async function clearUserQr() {
     await api('/api/admin/users/' + userId + '/qr', { method: 'POST', body: null });
     msg.textContent = 'Đã xoá cấu hình QR thành công';
     msg.className = 'message success';
-    await loadUsers(); // reload
+    await loadDashboard(); // reload
     setTimeout(() => closeUserQrModal(), 1000);
   } catch (error) {
     msg.textContent = error.message;
@@ -682,13 +684,14 @@ document.getElementById('userQrForm').addEventListener('submit', async (e) => {
   const msg = document.getElementById('userQrMessage');
   const type = document.querySelector('input[name="qrType"]:checked').value;
   
-  let body = { type };
+  let body = { qrType: type };
   if (type === 'vietqr') {
     body.bankId = form.elements['bankId'].value;
     body.accountNo = form.elements['accountNo'].value;
     body.accountName = form.elements['accountName'].value;
     body.amount = form.elements['amount'].value ? Number(form.elements['amount'].value) : 0;
     body.description = form.elements['description'].value;
+    body.background_image = form.elements['background_image'].value;
   } else {
     body.dataUrl = document.getElementById('qrImageDataUrl').value;
     if (!body.dataUrl) {
@@ -701,10 +704,10 @@ document.getElementById('userQrForm').addEventListener('submit', async (e) => {
   msg.textContent = 'Đang lưu...';
   msg.className = 'message';
   try {
-    await api('/api/admin/users/' + userId + '/qr', { method: 'POST', body });
+    await api('/api/admin/users/' + userId + '/qr', { method: 'POST', body: JSON.stringify(body) });
     msg.textContent = 'Đã lưu cấu hình QR thành công';
     msg.className = 'message success';
-    await loadUsers(); // reload
+    await loadDashboard(); // reload
     setTimeout(() => closeUserQrModal(), 1000);
   } catch (error) {
     msg.textContent = error.message;

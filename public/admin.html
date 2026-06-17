@@ -214,12 +214,12 @@
   </main>
 
   <div id="modalUserQr" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100;">
-    <div class="form-card" style="width: 500px; max-width: 90%; background: #fff; padding: 20px; border-radius: 8px; position: relative;">
+    <div class="form-card" style="width: 500px; max-width: 90%; max-height: 90vh; overflow-y: auto; background: #fff; padding: 20px; border-radius: 8px; position: relative;">
       <button onclick="closeUserQrModal()" style="position: absolute; right: 10px; top: 10px; background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
-      <h2>Cấu hình QR riêng biệt</h2>
-      <p style="margin-bottom: 15px;">Dành cho User ID: <span id="userQrIdText" style="font-weight: bold;"></span></p>
+      <h2 style="margin-bottom: 5px; font-size: 1.25rem;">Cấu hình QR riêng biệt</h2>
+      <p style="margin-bottom: 15px; font-size: 0.9rem;">Dành cho User ID: <span id="userQrIdText" style="font-weight: bold;"></span></p>
 
-      <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+      <div style="margin-bottom: 15px; display: flex; gap: 10px; font-size: 0.9rem;">
         <label><input type="radio" name="qrType" value="vietqr" checked onchange="toggleQrType()"> Tạo tự động (VietQR)</label>
         <label><input type="radio" name="qrType" value="image" onchange="toggleQrType()"> Tải lên ảnh (Tuỳ chọn)</label>
       </div>
@@ -228,36 +228,53 @@
         <input type="hidden" id="userQrId" name="userId">
         
         <div id="qrVietQrSection">
-          <label>Bank ID (Mã ngân hàng, vd: vcb, mbb, bidv)
-            <input name="bankId">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <label style="margin-bottom: 0;">Bank ID (vcb, mbb...)
+              <input name="bankId" style="margin-top: 4px; padding: 6px;">
+            </label>
+            <label style="margin-bottom: 0;">Số tài khoản
+              <input name="accountNo" style="margin-top: 4px; padding: 6px;">
+            </label>
+            <label style="margin-bottom: 0;">Chủ tài khoản
+              <input name="accountName" style="margin-top: 4px; padding: 6px;">
+            </label>
+            <label style="margin-bottom: 0;">Số tiền (trống=tự nhập)
+              <input name="amount" type="number" style="margin-top: 4px; padding: 6px;">
+            </label>
+          </div>
+          <label style="margin-top: 10px; display: block;">Nội dung thanh toán
+            <input name="description" style="margin-top: 4px; padding: 6px;">
           </label>
-          <label>Số tài khoản
-            <input name="accountNo">
-          </label>
-          <label>Chủ tài khoản
-            <input name="accountName">
-          </label>
-          <label>Số tiền (để trống nếu không cố định)
-            <input name="amount" type="number">
-          </label>
-          <label>Nội dung thanh toán
-            <input name="description">
+          
+          <label style="margin-top: 10px; display: block;">Chọn Ảnh nền
+            <div style="display: flex; gap: 15px; margin-top: 5px; margin-bottom: 10px;">
+              <label style="font-weight: normal; cursor: pointer; text-align: center; margin: 0;">
+                <input type="radio" name="background_image" value="qr1 (1).jpg" checked> Nền 1
+                <br>
+                <img src="/assets/images/qr1 (1).jpg" style="height: 60px; margin-top: 4px; border-radius: 4px; border: 1px solid #ccc;">
+              </label>
+              <label style="font-weight: normal; cursor: pointer; text-align: center; margin: 0;">
+                <input type="radio" name="background_image" value="qr1 (2).jpg"> Nền 2
+                <br>
+                <img src="/assets/images/qr1 (2).jpg" style="height: 60px; margin-top: 4px; border-radius: 4px; border: 1px solid #ccc;">
+              </label>
+            </div>
           </label>
         </div>
 
         <div id="qrImageSection" class="hidden">
           <label>Tải lên ảnh QR
-            <input type="file" id="qrImageUpload" accept="image/*" onchange="previewQrImage(event)">
+            <input type="file" id="qrImageUpload" accept="image/*" onchange="previewQrImage(event)" style="margin-top: 5px;">
           </label>
           <input type="hidden" name="dataUrl" id="qrImageDataUrl">
           <div style="margin-top: 10px; text-align: center;">
-            <img id="qrImagePreview" src="" style="max-width: 100%; max-height: 200px; display: none;">
+            <img id="qrImagePreview" src="" style="max-width: 100%; max-height: 150px; display: none;">
           </div>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-top: 20px;">
-          <button class="primary-button" type="submit" style="flex: 1;">Lưu cấu hình</button>
-          <button class="danger-button" type="button" onclick="clearUserQr()" style="flex: 1;">Xoá cấu hình</button>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+          <button class="primary-button" type="submit" style="flex: 1; padding: 8px;">Lưu</button>
+          <button class="danger-button" type="button" onclick="clearUserQr()" style="flex: 1; padding: 8px;">Xoá</button>
         </div>
         <p id="userQrMessage" class="message"></p>
       </form>
