@@ -229,8 +229,12 @@
         
         <div id="qrVietQrSection">
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <label style="margin-bottom: 0;">Bank ID (vcb, mbb...)
-              <input name="bankId" style="margin-top: 4px; padding: 6px;">
+            <label style="margin-bottom: 0; position: relative;">Ngân hàng
+              <input type="text" id="bankSearchInput" placeholder="Tìm ngân hàng..." autocomplete="off" style="margin-top: 4px; padding: 6px; width: 100%; box-sizing: border-box;" onfocus="showBankDropdown()" oninput="filterBanks()">
+              <input type="hidden" name="bankId" id="hiddenBankId">
+              <div id="bankDropdown" style="display: none; position: absolute; z-index: 1000; background: #fff; border: 1px solid #ccc; width: 100%; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 4px; margin-top: 2px;">
+                <!-- list of banks -->
+              </div>
             </label>
             <label style="margin-bottom: 0;">Số tài khoản
               <input name="accountNo" style="margin-top: 4px; padding: 6px;">
@@ -239,7 +243,7 @@
               <input name="accountName" style="margin-top: 4px; padding: 6px;">
             </label>
             <label style="margin-bottom: 0;">Số tiền (trống=tự nhập)
-              <input name="amount" type="number" style="margin-top: 4px; padding: 6px;">
+              <input name="amount" type="text" style="margin-top: 4px; padding: 6px;" oninput="formatCurrency(this)">
             </label>
           </div>
           <label style="margin-top: 10px; display: block;">Nội dung thanh toán

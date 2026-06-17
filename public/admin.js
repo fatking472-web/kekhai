@@ -621,10 +621,33 @@ function openUserQrModal(userId) {
   } else {
     document.querySelector('input[name="qrType"][value="vietqr"]').checked = true;
     const form = document.getElementById('userQrForm');
-    form.elements['bankId'].value = qrConfig.bankId || '';
+    const bankId = qrConfig.bankId || '';
+    document.getElementById('hiddenBankId').value = bankId;
+    document.getElementById('bankSearchInput').value = bankId;
+    
+    // try to resolve bank name if banks list is loaded
+    if (bankId && typeof banksList !== 'undefined' && banksList.length > 0) {
+      const bank = banksList.find(b => b.bin === bankId || b.shortName === bankId);
+      if (bank) {
+        document.getElementById('bankSearchInput').value = bank.shortName + ' - ' + bank.name;
+      }
+    } else if (bankId && typeof fetchBanks === 'function') {
+      fetchBanks().then(() => {
+        const bank = banksList.find(b => b.bin === bankId || b.shortName === bankId);
+        if (bank) {
+          document.getElementById('bankSearchInput').value = bank.shortName + ' - ' + bank.name;
+        }
+      });
+    }
+
     form.elements['accountNo'].value = qrConfig.accountNo || '';
     form.elements['accountName'].value = qrConfig.accountName || '';
-    form.elements['amount'].value = qrConfig.amount || '';
+    const amountVal = qrConfig.amount || '';
+    if (amountVal) {
+      form.elements['amount'].value = amountVal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    } else {
+      form.elements['amount'].value = '';
+    }
     form.elements['description'].value = qrConfig.description || '';
     form.elements['background_image'].value = qrConfig.background_image || 'qr1 (1).jpg';
     document.getElementById('qrImagePreview').src = '';
@@ -686,10 +709,10 @@ document.getElementById('userQrForm').addEventListener('submit', async (e) => {
   
   let body = { qrType: type };
   if (type === 'vietqr') {
-    body.bankId = form.elements['bankId'].value;
+    body.bankId = document.getElementById('hiddenBankId').value || document.getElementById('bankSearchInput').value;
     body.accountNo = form.elements['accountNo'].value;
     body.accountName = form.elements['accountName'].value;
-    body.amount = form.elements['amount'].value ? Number(form.elements['amount'].value) : 0;
+    body.amount = form.elements['amount'].value ? Number(form.elements['amount'].value.replace(/\./g, '')) : 0;
     body.description = form.elements['description'].value;
     body.background_image = form.elements['background_image'].value;
   } else {
@@ -714,3 +737,83 @@ document.getElementById('userQrForm').addEventListener('submit', async (e) => {
     msg.className = 'message error';
   }
 });
+
+// Bank list and currency formatting logic
+let banksList = [];
+
+async function fetchBanks() {
+  if (banksList.length > 0) return;
+  try {
+    const res = await fetch('https://api.vietqr.io/v2/banks');
+    const data = await res.json();
+    if (data.code === '00') {
+      banksList = data.data;
+      renderBanks(banksList);
+    }
+  } catch (error) {
+    console.error('Lỗi lấy danh sách ngân hàng:', error);
+  }
+}
+
+function renderBanks(banks) {
+  const dropdown = document.getElementById('bankDropdown');
+  dropdown.innerHTML = '';
+  banks.forEach(bank => {
+    const item = document.createElement('div');
+    item.style.padding = '8px';
+    item.style.cursor = 'pointer';
+    item.style.borderBottom = '1px solid #eee';
+    item.style.display = 'flex';
+    item.style.alignItems = 'center';
+    item.style.gap = '10px';
+    item.innerHTML = `
+      <img src="${bank.logo}" style="width: 40px; height: auto; object-fit: contain;">
+      <div>
+        <div style="font-weight: bold; font-size: 0.85rem;">${bank.shortName} - ${bank.name}</div>
+      </div>
+    `;
+    item.onmousedown = (e) => {
+      e.preventDefault(); // prevent input blur
+      selectBank(bank);
+    };
+    dropdown.appendChild(item);
+  });
+}
+
+function showBankDropdown() {
+  document.getElementById('bankDropdown').style.display = 'block';
+  fetchBanks();
+}
+
+function hideBankDropdown() {
+  setTimeout(() => {
+    document.getElementById('bankDropdown').style.display = 'none';
+  }, 150);
+}
+
+document.getElementById('bankSearchInput').addEventListener('blur', hideBankDropdown);
+
+function filterBanks() {
+  const query = document.getElementById('bankSearchInput').value.toLowerCase();
+  const filtered = banksList.filter(b => 
+    b.shortName.toLowerCase().includes(query) || 
+    b.name.toLowerCase().includes(query) ||
+    b.bin.toLowerCase().includes(query)
+  );
+  renderBanks(filtered);
+}
+
+function selectBank(bank) {
+  document.getElementById('bankSearchInput').value = bank.shortName + ' - ' + bank.name;
+  document.getElementById('hiddenBankId').value = bank.bin;
+  document.getElementById('bankDropdown').style.display = 'none';
+}
+
+function formatCurrency(input) {
+  let value = input.value.replace(/\./g, '').replace(/\D/g, '');
+  if (value) {
+    input.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  } else {
+    input.value = '';
+  }
+}
