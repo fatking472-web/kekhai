@@ -77,7 +77,7 @@ function ensureStore() {
   if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, '{}\n');
   if (!fs.existsSync(APPOINTMENTS_FILE)) fs.writeFileSync(APPOINTMENTS_FILE, '[]\n');
   if (!fs.existsSync(DECLARATIONS_FILE)) fs.writeFileSync(DECLARATIONS_FILE, '[]\n');
-  if (!fs.existsSync(VIETQR_CONFIG_FILE)) fs.writeFileSync(VIETQR_CONFIG_FILE, '{"bank_id":"vcb","bank_name":"Vietcombank","account_no":"","account_name":"","amount":0,"description":"","title":"Ngân hàng Nhà nước Việt Nam","subtitle":"","instruction":"","button_text":"Tải app VNeID để xác thực"}\n');
+  if (!fs.existsSync(VIETQR_CONFIG_FILE)) fs.writeFileSync(VIETQR_CONFIG_FILE, '{"bank_id":"vcb","bank_name":"Vietcombank","account_no":"","account_name":"","amount":0,"description":"","title":"Ngân hàng Nhà nước Việt Nam","subtitle":"","instruction":"","button_text":"Tải app VNeID để xác thực","background_image":"qr1 (1).jpg"}\n');
 }
 
 function readJson(file, fallback) {
@@ -142,6 +142,7 @@ function safeUser(user) {
       backDoc: user.attachments?.backDoc || user.backDoc || null
     },
     role: user.role,
+    customQrConfig: user.customQrConfig || null,
     createdAt: user.createdAt,
     lastLoginAt: user.lastLoginAt || null
   };
@@ -430,11 +431,11 @@ async function handleApi(req, res, pathname) {
     };
 
     if (!fullName) return sendError(res, 400, 'Vui lòng nhập họ và tên');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return sendError(res, 400, 'Email không hợp lệ');
+
     if (password.length < 6) return sendError(res, 400, 'Mật khẩu tối thiểu 6 ký tự');
 
     const users = readJson(USERS_FILE, []);
-    if (users.some((user) => user.email === email)) return sendError(res, 409, 'Email đã được đăng ký');
+
 
     const passwordData = hashPassword(password);
     const user = {
@@ -622,6 +623,24 @@ async function handleApi(req, res, pathname) {
     if (changedSessions) writeJson(SESSIONS_FILE, sessions);
 
     return sendJson(res, 200, { ok: true, deletedUser: safeUser(deletedUser) });
+  }
+
+  if (req.method === 'POST' && pathname.startsWith('/api/admin/users/') && pathname.endsWith('/qr')) {
+    if (!requireAdmin(req, res)) return;
+    const parts = pathname.split('/');
+    // Path: /api/admin/users/:id/qr
+    const userId = parts[4];
+    let body;
+    try { body = await readBody(req); } catch { return sendError(res, 400, 'Invalid JSON'); }
+    
+    const users = readJson(USERS_FILE, []);
+    const userIndex = users.findIndex((u) => u.id === userId);
+    if (userIndex === -1) return sendError(res, 404, 'Không tìm thấy người dùng');
+
+    users[userIndex].customQrConfig = body;
+    writeJson(USERS_FILE, users);
+
+    return sendJson(res, 200, { ok: true, message: 'Đã cập nhật cấu hình QR thành công', user: safeUser(users[userIndex]) });
   }
 
   if (req.method === 'GET' && pathname === '/api/admin/export.xls') {

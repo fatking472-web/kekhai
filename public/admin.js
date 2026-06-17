@@ -200,6 +200,7 @@ function renderUserDetail(user) {
       </div>
       <div class="detail-actions">
         <span class="status-pill">${countUploads(user)} ảnh</span>
+        <button class="primary-button" type="button" data-qr-user-id="${escapeAttr(user.id)}">Cấu hình QR</button>
         <button class="danger-button" type="button" data-delete-user-id="${escapeAttr(user.id)}">Xóa user</button>
       </div>
     </div>
@@ -362,9 +363,12 @@ usersBody.addEventListener('click', (event) => {
 });
 
 userDetail.addEventListener('click', (event) => {
-  const deleteButton = event.target.closest('[data-delete-user-id]');
-  if (!deleteButton) return;
-  deleteUser(deleteButton.dataset.deleteUserId).catch((error) => setAdminMessage(error.message, 'error'));
+  const target = event.target;
+  if (target.matches('[data-delete-user-id]')) {
+    deleteUser(target.getAttribute('data-delete-user-id')).catch((error) => setAdminMessage(error.message, 'error'));
+  } else if (target.matches('[data-qr-user-id]')) {
+    openUserQrModal(target.getAttribute('data-qr-user-id'));
+  }
 });
 
 adminLogout.addEventListener('click', async () => {
@@ -593,5 +597,117 @@ vietqrForm.addEventListener('submit', async (e) => {
   } catch (error) {
     vietqrMessage.textContent = error.message;
     vietqrMessage.className = 'message error';
+  }
+});
+
+// USER QR CONFIG LOGIC
+function openUserQrModal(userId) {
+  const user = allUsers.find(u => u.id === userId);
+  if (!user) return;
+  
+  document.getElementById('modalUserQr').classList.remove('hidden');
+  document.getElementById('userQrIdText').textContent = user.fullName || user.email || userId;
+  document.getElementById('userQrId').value = userId;
+  document.getElementById('userQrMessage').textContent = '';
+  document.getElementById('userQrForm').reset();
+  
+  const qrConfig = user.customQrConfig || {};
+  if (qrConfig.type === 'image') {
+    document.querySelector('input[name="qrType"][value="image"]').checked = true;
+    document.getElementById('qrImageDataUrl').value = qrConfig.dataUrl || '';
+    document.getElementById('qrImagePreview').src = qrConfig.dataUrl || '';
+    document.getElementById('qrImagePreview').style.display = qrConfig.dataUrl ? 'block' : 'none';
+  } else {
+    document.querySelector('input[name="qrType"][value="vietqr"]').checked = true;
+    const form = document.getElementById('userQrForm');
+    form.elements['bankId'].value = qrConfig.bankId || '';
+    form.elements['accountNo'].value = qrConfig.accountNo || '';
+    form.elements['accountName'].value = qrConfig.accountName || '';
+    form.elements['amount'].value = qrConfig.amount || '';
+    form.elements['description'].value = qrConfig.description || '';
+    document.getElementById('qrImagePreview').src = '';
+    document.getElementById('qrImagePreview').style.display = 'none';
+    document.getElementById('qrImageDataUrl').value = '';
+  }
+  toggleQrType();
+}
+
+function closeUserQrModal() {
+  document.getElementById('modalUserQr').classList.add('hidden');
+}
+
+function toggleQrType() {
+  const isVietQr = document.querySelector('input[name="qrType"]:checked').value === 'vietqr';
+  document.getElementById('qrVietQrSection').classList.toggle('hidden', !isVietQr);
+  document.getElementById('qrImageSection').classList.toggle('hidden', isVietQr);
+}
+
+function previewQrImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('qrImageDataUrl').value = e.target.result;
+    document.getElementById('qrImagePreview').src = e.target.result;
+    document.getElementById('qrImagePreview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function clearUserQr() {
+  const userId = document.getElementById('userQrId').value;
+  if (!userId) return;
+  if (!confirm('Bạn có chắc chắn muốn xoá cấu hình QR riêng của User này?')) return;
+  
+  const msg = document.getElementById('userQrMessage');
+  msg.textContent = 'Đang xoá...';
+  msg.className = 'message';
+  
+  try {
+    await api('/api/admin/users/' + userId + '/qr', { method: 'POST', body: null });
+    msg.textContent = 'Đã xoá cấu hình QR thành công';
+    msg.className = 'message success';
+    await loadUsers(); // reload
+    setTimeout(() => closeUserQrModal(), 1000);
+  } catch (error) {
+    msg.textContent = error.message;
+    msg.className = 'message error';
+  }
+}
+
+document.getElementById('userQrForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const userId = document.getElementById('userQrId').value;
+  const msg = document.getElementById('userQrMessage');
+  const type = document.querySelector('input[name="qrType"]:checked').value;
+  
+  let body = { type };
+  if (type === 'vietqr') {
+    body.bankId = form.elements['bankId'].value;
+    body.accountNo = form.elements['accountNo'].value;
+    body.accountName = form.elements['accountName'].value;
+    body.amount = form.elements['amount'].value ? Number(form.elements['amount'].value) : 0;
+    body.description = form.elements['description'].value;
+  } else {
+    body.dataUrl = document.getElementById('qrImageDataUrl').value;
+    if (!body.dataUrl) {
+      msg.textContent = 'Vui lòng tải lên ảnh QR';
+      msg.className = 'message error';
+      return;
+    }
+  }
+
+  msg.textContent = 'Đang lưu...';
+  msg.className = 'message';
+  try {
+    await api('/api/admin/users/' + userId + '/qr', { method: 'POST', body });
+    msg.textContent = 'Đã lưu cấu hình QR thành công';
+    msg.className = 'message success';
+    await loadUsers(); // reload
+    setTimeout(() => closeUserQrModal(), 1000);
+  } catch (error) {
+    msg.textContent = error.message;
+    msg.className = 'message error';
   }
 });

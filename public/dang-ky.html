@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>Tờ khai đăng ký giao dịch điện tử</title>
+  <title>Tờ khai đăng ký bảo hiểm điện tử</title>
   <link rel="stylesheet" href="/register-flow.css">
 </head>
 <body>
@@ -57,7 +57,7 @@
     </div>
 
     <section class="declaration-card">
-      <h1>Tờ khai đăng ký giao dịch điện tử</h1>
+      <h1>Tờ khai đăng ký bảo hiểm điện tử</h1>
       <form id="registerForm">
         <section class="form-section">
           <h2>Thông tin đăng ký</h2>
@@ -68,17 +68,15 @@
             <label class="field">Mã số bảo hiểm xã hội <span class="req">*</span>
               <input name="insuranceCode" placeholder="Nhập mã số BHXH" required>
             </label>
-            <label class="field">Loại giấy tờ <span class="req">*</span>
-              <input name="documentType" placeholder="VD: CCCD, Hộ chiếu..." required>
+            <label class="field">Nhập số cccd/ hộ chiếu <span class="req">*</span>
+              <input name="documentType" placeholder="Nhập số CCCD/Hộ chiếu" required>
             </label>
 
 
             <label class="field">Số điện thoại <span class="req">*</span>
               <input name="phone" placeholder="Nhập số điện thoại" required>
             </label>
-            <label class="field">Email <span class="req">*</span>
-              <input name="email" type="email" placeholder="Nhập email" required>
-            </label>
+
           </div>
           <div class="form-grid" style="margin-top: 28px;">
             <label class="field">Tỉnh/Thành phố <span class="req">*</span>
@@ -197,7 +195,6 @@
       form.documentType.value = 'CCCD';
 
       form.phone.value = '090' + stamp;
-      form.email.value = 'dangky' + stamp + '@example.com';
       form.province.value = 'Hà Nội';
     });
   </script>
