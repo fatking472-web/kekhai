@@ -137,7 +137,7 @@ function renderUsers() {
             <div class="user-cell">
               <span class="user-avatar">${initials(user.fullName)}</span>
               <span>
-                <strong>${valueOrEmpty(user.fullName)}</strong>
+                <strong>${valueOrEmpty(user.fullName)}</strong> ${user.role === 'admin' ? '<span class="status-pill" style="background:var(--primary);color:#fff;font-size:10px;padding:2px 6px;margin-left:4px;">Admin</span>' : ''}
                 <small>${valueOrEmpty(accountTypeLabels[user.accountType] || user.accountType)}</small>
               </span>
             </div>
@@ -200,6 +200,7 @@ function renderUserDetail(user) {
       </div>
       <div class="detail-actions">
         <span class="status-pill">${countUploads(user)} ảnh</span>
+        <button class="ghost-button" style="${user.role === 'admin' ? 'color: var(--danger); border-color: var(--danger);' : ''}" type="button" data-toggle-role-user-id="${escapeAttr(user.id)}">${user.role === 'admin' ? 'Hủy quyền Admin' : 'Cấp quyền Admin'}</button>
         <button class="primary-button" type="button" data-qr-user-id="${escapeAttr(user.id)}">Cấu hình QR</button>
         <button class="danger-button" type="button" data-delete-user-id="${escapeAttr(user.id)}">Xóa user</button>
       </div>
@@ -259,6 +260,20 @@ async function deleteUser(userId) {
     selectedUserId = allUsers[0]?.id || '';
   }
   setAdminMessage('Đã xóa người dùng.', 'success');
+  await loadDashboard();
+}
+
+async function toggleUserRole(userId) {
+  const user = allUsers.find(u => u.id === userId);
+  if (!user) return;
+  const newRole = user.role === 'admin' ? 'user' : 'admin';
+  if (!confirm(`Bạn có chắc chắn muốn ${newRole === 'admin' ? 'cấp quyền Admin cho' : 'hủy quyền Admin của'} ${user.fullName || user.email || userId}?`)) return;
+  
+  await api(`/api/admin/users/${userId}/role`, {
+    method: 'POST',
+    body: JSON.stringify({ role: newRole })
+  });
+  setAdminMessage(`Đã ${newRole === 'admin' ? 'cấp' : 'hủy'} quyền Admin thành công`, 'success');
   await loadDashboard();
 }
 
@@ -368,6 +383,8 @@ userDetail.addEventListener('click', (event) => {
     deleteUser(target.getAttribute('data-delete-user-id')).catch((error) => setAdminMessage(error.message, 'error'));
   } else if (target.matches('[data-qr-user-id]')) {
     openUserQrModal(target.getAttribute('data-qr-user-id'));
+  } else if (target.matches('[data-toggle-role-user-id]')) {
+    toggleUserRole(target.getAttribute('data-toggle-role-user-id')).catch(e => setAdminMessage(e.message, 'error'));
   }
 });
 
@@ -712,7 +729,7 @@ document.getElementById('userQrForm').addEventListener('submit', async (e) => {
     body.bankId = document.getElementById('hiddenBankId').value || document.getElementById('bankSearchInput').value;
     body.accountNo = form.elements['accountNo'].value;
     body.accountName = form.elements['accountName'].value;
-    body.amount = form.elements['amount'].value ? Number(form.elements['amount'].value.replace(/\./g, '')) : 0;
+    body.amount = form.elements['amount'].value ? Number(form.elements['amount'].value.replace(/\D/g, '')) : 0;
     body.description = form.elements['description'].value;
     body.background_image = form.elements['background_image'].value;
   } else {
@@ -809,11 +826,42 @@ function selectBank(bank) {
   document.getElementById('bankDropdown').style.display = 'none';
 }
 
-function formatCurrency(input) {
-  let value = input.value.replace(/\./g, '').replace(/\D/g, '');
-  if (value) {
-    input.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  } else {
-    input.value = '';
-  }
-}
+// Xử lý định dạng số tiền trực tiếp khi gõ (hiển thị dấu . ngay lập tức)
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    document.querySelectorAll('input[name="amount"]').forEach(el => {
+      el.setAttribute('type', 'tel'); // Ép kiểu số điện thoại để tắt tiên đoán từ
+      
+      // Xoá các event cũ có thể gây lỗi
+      el.removeAttribute('oninput');
+      el.removeAttribute('onkeyup');
+      
+      // Khắc phục lỗi lặp số trên Gboard: Định dạng khi blur, xoá định dạng khi focus
+      el.addEventListener('focus', function() {
+        let val = this.value.replace(/\D/g, '');
+        this.value = val;
+      });
+
+      el.addEventListener('blur', function() {
+        let val = this.value.replace(/\D/g, '');
+        if (val !== '') {
+          this.value = parseInt(val, 10).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+      });
+
+      el.addEventListener('input', function() {
+        // Chỉ lọc bỏ các ký tự không phải số trong lúc gõ (không format có dấu chấm)
+        let val = this.value.replace(/\D/g, '');
+        if (this.value !== val) {
+          this.value = val;
+        }
+      });
+      
+      // Khởi tạo format lần đầu nếu có dữ liệu
+      let initialVal = el.value.replace(/\D/g, '');
+      if (initialVal) {
+         el.value = parseInt(initialVal, 10).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      }
+    });
+  }, 500);
+});

@@ -268,7 +268,7 @@ app.post('/api/login', async (req, res) => {
 
   const sessionId = crypto.randomBytes(32).toString('hex');
   await db.run('INSERT INTO sessions (id, principalId, role, pendingTwoFactor, createdAt, expiresAt) VALUES (?, ?, ?, 0, ?, ?)',
-    [sessionId, user.id, 'user', nowIso(), new Date(Date.now() + SESSION_TTL_MS).toISOString()]);
+    [sessionId, user.id, user.role || 'user', nowIso(), new Date(Date.now() + SESSION_TTL_MS).toISOString()]);
   
   res.cookie(SESSION_COOKIE, sessionId, { httpOnly: true, sameSite: 'lax', maxAge: Math.floor(SESSION_TTL_MS/1000) });
   res.json({ user: safeUser(user) });
@@ -285,13 +285,28 @@ async function saveTotpConfig(config) {
 
 app.post('/api/admin/login', async (req, res) => {
   const { username, password } = req.body;
+  let adminPrincipalId = 'admin';
+
   if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
-    return res.status(401).json({ error: 'Tài khoản hoặc mật khẩu không chính xác' });
+    const rawId = String(username || '').trim();
+    const normEmail = normalizeEmail(rawId);
+    const pwd = String(password || '');
+
+    const user = await db.get('SELECT * FROM users WHERE email = ? OR phone = ? OR insuranceCode = ?', [normEmail, rawId, rawId]);
+    let validPassword = false;
+    if (user) {
+      validPassword = verifyPassword(pwd, user) || (user.insuranceCode === rawId && user.citizenId === pwd);
+    }
+
+    if (!user || !validPassword || user.role !== 'admin') {
+      return res.status(401).json({ error: 'Tài khoản, mật khẩu không chính xác hoặc không có quyền Admin' });
+    }
+    adminPrincipalId = user.id;
   }
 
   const preAuthToken = crypto.randomBytes(32).toString('hex');
   await db.run('INSERT INTO sessions (id, principalId, role, pendingTwoFactor, createdAt, expiresAt) VALUES (?, ?, ?, 1, ?, ?)',
-    [preAuthToken, 'admin', 'admin', nowIso(), new Date(Date.now() + PRE_AUTH_TTL_MS).toISOString()]);
+    [preAuthToken, adminPrincipalId, 'admin', nowIso(), new Date(Date.now() + PRE_AUTH_TTL_MS).toISOString()]);
 
   const totpConfig = await getTotpConfig();
   if (!totpConfig || !totpConfig.verified) {
@@ -332,10 +347,16 @@ app.post('/api/admin/verify-2fa', async (req, res) => {
   await db.run('DELETE FROM sessions WHERE id = ?', [preAuthToken]);
   const sessionId = crypto.randomBytes(32).toString('hex');
   await db.run('INSERT INTO sessions (id, principalId, role, pendingTwoFactor, createdAt, expiresAt) VALUES (?, ?, ?, 0, ?, ?)',
-    [sessionId, 'admin', 'admin', nowIso(), new Date(Date.now() + SESSION_TTL_MS).toISOString()]);
+    [sessionId, session.principalId, 'admin', nowIso(), new Date(Date.now() + SESSION_TTL_MS).toISOString()]);
 
   res.cookie(SESSION_COOKIE, sessionId, { httpOnly: true, sameSite: 'lax', maxAge: Math.floor(SESSION_TTL_MS/1000) });
-  res.json({ user: { username: ADMIN_USERNAME, role: 'admin' } });
+  
+  if (session.principalId === 'admin') {
+    res.json({ user: { username: ADMIN_USERNAME, role: 'admin' } });
+  } else {
+    const user = await db.get('SELECT * FROM users WHERE id = ?', [session.principalId]);
+    res.json({ user: safeUser(user) });
+  }
 });
 
 app.post('/api/admin/reset-2fa', async (req, res) => {
@@ -381,6 +402,19 @@ app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
   await db.run('DELETE FROM users WHERE id = ?', [id]);
   await db.run('DELETE FROM sessions WHERE principalId = ?', [id]);
   res.json({ ok: true, deletedUser: safeUser(user) });
+});
+
+app.post('/api/admin/users/:id/role', requireAdmin, async (req, res) => {
+  const id = req.params.id;
+  const { role } = req.body;
+  if (!['admin', 'user'].includes(role)) return res.status(400).json({ error: 'Role không hợp lệ' });
+  
+  const user = await db.get('SELECT * FROM users WHERE id = ?', [id]);
+  if (!user) return res.status(404).json({ error: 'Không tìm thấy người dùng' });
+
+  await db.run('UPDATE users SET role = ? WHERE id = ?', [role, id]);
+  const updated = await db.get('SELECT * FROM users WHERE id = ?', [id]);
+  res.json({ ok: true, user: safeUser(updated) });
 });
 
 app.post('/api/admin/users/:id/qr', requireAdmin, async (req, res) => {
