@@ -429,21 +429,25 @@ const tabUsers = document.getElementById('tabUsers');
 const tabDeclarations = document.getElementById('tabDeclarations');
 const tabAppointments = document.getElementById('tabAppointments');
 const tabVietQR = document.getElementById('tabVietQR');
+const tabPassword = document.getElementById('tabPassword');
 const sectionUsers = document.getElementById('sectionUsers');
 const sectionDeclarations = document.getElementById('sectionDeclarations');
 const sectionAppointments = document.getElementById('sectionAppointments');
 const sectionVietQR = document.getElementById('sectionVietQR');
+const sectionPassword = document.getElementById('sectionPassword');
 
 function switchTab(activeTabId) {
   tabUsers.className = activeTabId === 'tabUsers' ? 'primary-button' : 'ghost-button';
   tabDeclarations.className = activeTabId === 'tabDeclarations' ? 'primary-button' : 'ghost-button';
   tabAppointments.className = activeTabId === 'tabAppointments' ? 'primary-button' : 'ghost-button';
   tabVietQR.className = activeTabId === 'tabVietQR' ? 'primary-button' : 'ghost-button';
+  tabPassword.className = activeTabId === 'tabPassword' ? 'primary-button' : 'ghost-button';
 
   sectionUsers.className = activeTabId === 'tabUsers' ? '' : 'hidden';
   sectionDeclarations.className = activeTabId === 'tabDeclarations' ? '' : 'hidden';
   sectionAppointments.className = activeTabId === 'tabAppointments' ? '' : 'hidden';
   sectionVietQR.className = activeTabId === 'tabVietQR' ? '' : 'hidden';
+  sectionPassword.className = activeTabId === 'tabPassword' ? '' : 'hidden';
 
   if (activeTabId === 'tabDeclarations') loadDeclarations();
   if (activeTabId === 'tabAppointments') loadAppointments();
@@ -454,6 +458,7 @@ tabUsers.addEventListener('click', () => switchTab('tabUsers'));
 tabDeclarations.addEventListener('click', () => switchTab('tabDeclarations'));
 tabAppointments.addEventListener('click', () => switchTab('tabAppointments'));
 tabVietQR.addEventListener('click', () => switchTab('tabVietQR'));
+tabPassword.addEventListener('click', () => switchTab('tabPassword'));
 
 document.getElementById('refreshDeclarationsButton').addEventListener('click', loadDeclarations);
 
@@ -612,6 +617,31 @@ vietqrForm.addEventListener('submit', async (e) => {
   } catch (error) {
     vietqrMessage.textContent = error.message;
     vietqrMessage.className = 'message error';
+  }
+});
+
+// Password logic
+const passwordForm = document.getElementById('passwordForm');
+const passwordMessage = document.getElementById('passwordMessage');
+
+passwordForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  passwordMessage.textContent = 'Đang lưu...';
+  passwordMessage.className = 'message';
+  
+  try {
+    const body = formData(passwordForm);
+    await api('/api/admin/change-password', {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+    
+    passwordMessage.textContent = 'Đổi mật khẩu thành công';
+    passwordMessage.className = 'message success';
+    passwordForm.reset();
+  } catch (error) {
+    passwordMessage.textContent = error.message;
+    passwordMessage.className = 'message error';
   }
 });
 

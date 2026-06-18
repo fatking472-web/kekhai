@@ -17,7 +17,7 @@ const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : pat
 const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 const DB_FILE = path.join(DATA_DIR, 'database.sqlite');
 const SESSION_COOKIE = 'kb_session';
-const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 const PRE_AUTH_TTL_MS = 5 * 60 * 1000;
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
@@ -252,7 +252,7 @@ app.post('/api/register', async (req, res) => {
   await db.run('INSERT INTO sessions (id, principalId, role, pendingTwoFactor, createdAt, expiresAt) VALUES (?, ?, ?, 0, ?, ?)',
     [sessionId, id, 'user', nowIso(), new Date(Date.now() + SESSION_TTL_MS).toISOString()]);
   
-  res.cookie(SESSION_COOKIE, sessionId, { httpOnly: true, sameSite: 'lax', maxAge: Math.floor(SESSION_TTL_MS/1000) });
+  res.cookie(SESSION_COOKIE, sessionId, { httpOnly: true, sameSite: 'lax', maxAge: SESSION_TTL_MS });
   const user = await db.get('SELECT * FROM users WHERE id = ?', [id]);
   res.status(201).json({ user: safeUser(user) });
 });
@@ -277,7 +277,7 @@ app.post('/api/login', async (req, res) => {
   await db.run('INSERT INTO sessions (id, principalId, role, pendingTwoFactor, createdAt, expiresAt) VALUES (?, ?, ?, 0, ?, ?)',
     [sessionId, user.id, user.role || 'user', nowIso(), new Date(Date.now() + SESSION_TTL_MS).toISOString()]);
   
-  res.cookie(SESSION_COOKIE, sessionId, { httpOnly: true, sameSite: 'lax', maxAge: Math.floor(SESSION_TTL_MS/1000) });
+  res.cookie(SESSION_COOKIE, sessionId, { httpOnly: true, sameSite: 'lax', maxAge: SESSION_TTL_MS });
   res.json({ user: safeUser(user) });
 });
 
@@ -290,11 +290,27 @@ async function saveTotpConfig(config) {
   await db.run('INSERT OR REPLACE INTO settings (key, value_json) VALUES (?, ?)', ['admin-2fa', JSON.stringify(config)]);
 }
 
+async function verifyRootAdmin(username, password) {
+  if (username !== ADMIN_USERNAME) return false;
+  const adminPwdSetting = await db.get('SELECT value_json FROM settings WHERE key = ?', ['admin-password']);
+  if (adminPwdSetting) {
+    const { salt, hash } = JSON.parse(adminPwdSetting.value_json);
+    const attempted = hashPassword(password, salt).hash;
+    try {
+      const expected = Buffer.from(hash, 'hex');
+      return crypto.timingSafeEqual(Buffer.from(attempted, 'hex'), expected);
+    } catch(e) { return false; }
+  }
+  return password === ADMIN_PASSWORD;
+}
+
 app.post('/api/admin/login', async (req, res) => {
   const { username, password } = req.body;
   let adminPrincipalId = 'admin';
 
-  if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+  const isRootAdmin = await verifyRootAdmin(username, password);
+
+  if (!isRootAdmin) {
     const rawId = String(username || '').trim();
     const normEmail = normalizeEmail(rawId);
     const pwd = String(password || '');
@@ -356,7 +372,7 @@ app.post('/api/admin/verify-2fa', async (req, res) => {
   await db.run('INSERT INTO sessions (id, principalId, role, pendingTwoFactor, createdAt, expiresAt) VALUES (?, ?, ?, 0, ?, ?)',
     [sessionId, session.principalId, 'admin', nowIso(), new Date(Date.now() + SESSION_TTL_MS).toISOString()]);
 
-  res.cookie(SESSION_COOKIE, sessionId, { httpOnly: true, sameSite: 'lax', maxAge: Math.floor(SESSION_TTL_MS/1000) });
+  res.cookie(SESSION_COOKIE, sessionId, { httpOnly: true, sameSite: 'lax', maxAge: SESSION_TTL_MS });
   
   if (session.principalId === 'admin') {
     res.json({ user: { username: ADMIN_USERNAME, role: 'admin' } });
@@ -368,7 +384,8 @@ app.post('/api/admin/verify-2fa', async (req, res) => {
 
 app.post('/api/admin/reset-2fa', async (req, res) => {
   const { emergencyCode, username, password } = req.body;
-  if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) return res.status(401).json({ error: 'Sai tài khoản' });
+  const isRootAdmin = await verifyRootAdmin(username, password);
+  if (!isRootAdmin) return res.status(401).json({ error: 'Sai tài khoản' });
   
   const config = await getTotpConfig();
   if (!config || !config.emergencyHash) return res.status(400).json({ error: 'Chưa cài đặt 2FA' });
@@ -378,6 +395,30 @@ app.post('/api/admin/reset-2fa', async (req, res) => {
 
   await db.run('DELETE FROM settings WHERE key = ?', ['admin-2fa']);
   res.json({ ok: true, message: '2FA đã reset' });
+});
+
+app.post('/api/admin/change-password', requireAdmin, async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  if (!oldPassword || !newPassword) return res.status(400).json({ error: 'Vui lòng nhập đầy đủ thông tin' });
+
+  if (req.session.principalId === 'admin') {
+    const valid = await verifyRootAdmin(ADMIN_USERNAME, oldPassword);
+    if (!valid) return res.status(400).json({ error: 'Mật khẩu cũ không chính xác' });
+
+    const newHash = hashPassword(newPassword);
+    await db.run('INSERT OR REPLACE INTO settings (key, value_json) VALUES (?, ?)', ['admin-password', JSON.stringify(newHash)]);
+    res.json({ message: 'Đổi mật khẩu thành công' });
+  } else {
+    const user = await db.get('SELECT * FROM users WHERE id = ?', [req.session.principalId]);
+    if (!user) return res.status(404).json({ error: 'Không tìm thấy người dùng' });
+
+    const valid = verifyPassword(oldPassword, user);
+    if (!valid) return res.status(400).json({ error: 'Mật khẩu cũ không chính xác' });
+
+    const { salt, hash } = hashPassword(newPassword);
+    await db.run('UPDATE users SET salt = ?, passwordHash = ? WHERE id = ?', [salt, hash, user.id]);
+    res.json({ message: 'Đổi mật khẩu thành công' });
+  }
 });
 
 app.get('/api/admin/stats', requireAdmin, async (req, res) => {
