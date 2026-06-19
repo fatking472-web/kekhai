@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mã QR của bạn</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #1a237e 0%, #0d1642 100%);
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            color: white;
+        }
+
+        .time {
+            font-weight: 500;
+        }
+
+        .signal {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 130px 80px, #fff, rgba(0,0,0,0));
+            background-size: 200px 200px;
+            animation: stars 4s linear infinite;
+        }
+
+        @keyframes stars {
+            from { transform: translateY(0); }
+            to { transform: translateY(-200px); }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 15px 0;
+            color: white;
+            position: relative;
+            z-index: 10;
+        }
+
+        .back-button {
+            font-size: 24px;
+        }
+
+        .support {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+        }
+
+        .title-points-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 90%;
+            max-width: 400px;
+            margin-top: 30px;
+        }
+
+        .points {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .barcode-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px 20px;
+            width: 90%;
+            max-width: 400px;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .nav-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .nav-button.active {
+            color: #3b82f6;
+        }
+
+        .nav-button.inactive {
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+
+    <!-- Header -->
+    <div class="header">
+        <a href="/" class="back-button">
+            <i class="fas fa-times"></i>
+        </a>
+        <div class="support">
+            <span>Hỗ trợ</span>
+            <i class="fas fa-headphones"></i>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="title-points-container">
+            <h1 class="text-xl font-semibold" id="userNameLabel">Quý khách</h1>
+            <div class="points">
+                <span class="text-2xl font-bold">0</span>
+                <i class="fas fa-coins text-yellow-400"></i>
+            </div>
+        </div>
+
+        <div class="barcode-card">
+            <div class="mb-4">
+                <img id="barcode"/>
+            </div>
+            <div class="text-black text-xl font-mono tracking-wider" id="barcodeNumberText">0961 5181 3517 4034 30</div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-buttons">
+            <button class="nav-button active" onclick="location.href='/my-qr'">
+                <i class="fas fa-credit-card text-xl"></i>
+                <span class="text-sm">Mã của bạn</span>
+            </button>
+            <button class="nav-button inactive" onclick="location.href='/scan-qr'">
+                <i class="fas fa-qrcode text-xl"></i>
+                <span class="text-sm">Quét mã</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            let barcodeVal = "096151813517403430";
+            let displayVal = "0961 5181 3517 4034 30";
+            
+            try {
+                // Fetch logged-in user profile
+                const res = await fetch('/api/me');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.principal && data.principal.user) {
+                        const user = data.principal.user;
+                        document.getElementById('userNameLabel').textContent = user.fullName || "Quý khách";
+                        
+                        // Generate barcode based on user phone
+                        if (user.phone) {
+                            let cleanPhone = user.phone.replace(/\D/g, '');
+                            if (cleanPhone.length < 10) {
+                                cleanPhone = cleanPhone.padEnd(10, '0');
+                            } else if (cleanPhone.length > 10) {
+                                cleanPhone = cleanPhone.slice(0, 10);
+                            }
+                            barcodeVal = cleanPhone + '17403430';
+                            displayVal = barcodeVal.replace(/(\d{4})(\d{4})(\d{4})(\d{4})(\d{2})/, '$1 $2 $3 $4 $5');
+                        }
+                    }
+                } else {
+                    // Redirect to login if unauthorized
+                    window.location.href = '/';
+                    return;
+                }
+            } catch (err) {
+                console.error("Lỗi lấy thông tin user:", err);
+            }
+
+            document.getElementById('barcodeNumberText').textContent = displayVal;
+
+            JsBarcode("#barcode", barcodeVal, {
+                format: "CODE128",
+                width: 2.2,
+                height: 75,
+                displayValue: false
+            });
+        });
+    </script>
+</body>
+</html>

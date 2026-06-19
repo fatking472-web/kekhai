@@ -6,6 +6,138 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>Tờ khai đăng ký bảo hiểm điện tử</title>
   <link rel="stylesheet" href="/register-flow.css">
+  <style>
+    /* Style for Portrait Box (4x6) */
+    .portrait-upload-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 10px 0 25px;
+    }
+    .portrait-box-label {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #0b2a55;
+      text-transform: uppercase;
+    }
+    .portrait-box {
+      width: 140px;
+      height: 186px; /* 4:6 ratio */
+      border: 2px dashed #1083ff;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #fbfdff;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s;
+      text-align: center;
+      padding: 10px;
+    }
+    .portrait-box:hover {
+      background: #f0f7ff;
+      border-color: #0b68cc;
+    }
+    .portrait-box input[type="file"] {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 2;
+      left: 0;
+      top: 0;
+    }
+    .portrait-box .preview-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 6px;
+      z-index: 1;
+    }
+
+    /* Style for CCCD Box (Side by side) */
+    .cccd-upload-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 15px;
+    }
+    .cccd-box-wrapper {
+      display: flex;
+      flex-direction: column;
+    }
+    .cccd-box-label {
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #3b4655;
+    }
+    .cccd-upload-box {
+      height: 160px;
+      border: 2px dashed #1083ff;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #fbfdff;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s;
+      text-align: center;
+      padding: 10px;
+    }
+    .cccd-upload-box:hover {
+      background: #f0f7ff;
+      border-color: #0b68cc;
+    }
+    .cccd-upload-box input[type="file"] {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 2;
+      left: 0;
+      top: 0;
+    }
+    .cccd-upload-box .preview-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 6px;
+      z-index: 1;
+    }
+    .upload-icon {
+      font-size: 24px;
+      color: #1083ff;
+      margin-bottom: 6px;
+    }
+    .upload-text {
+      font-size: 12px;
+      font-weight: bold;
+      color: #4e5d71;
+    }
+
+    @media (max-width: 720px) {
+      .cccd-upload-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+  </style>
 </head>
 <body>
   <header class="site-header">
@@ -57,34 +189,105 @@
     </div>
 
     <section class="declaration-card">
-      <h1>Tờ khai đăng ký bảo hiểm điện tử</h1>
-      <form id="registerForm">
+      <h1 style="color:#0b2a55; margin-bottom:10px;">TỜ KHAI BẢO HIỂM ĐIỆN TỬ</h1>
+      
+      <form id="registerForm" enctype="multipart/form-data">
+        
+        <!-- Portrait Photo Upload 4x6 at the top -->
+        <div class="portrait-upload-container">
+          <div class="portrait-box" id="portraitBox">
+            <input type="file" id="portraitInput" name="portrait" accept="image/*" required>
+            <div class="upload-content-placeholder">
+              <div style="font-size:24px; color:#1083ff; margin-bottom:5px;">📷</div>
+              <div class="portrait-box-label">CHỤP ẢNH</div>
+              <div style="font-size:12px; color:#6e7d8c; font-weight:bold;">Chân Dung 4x6</div>
+            </div>
+          </div>
+        </div>
+
         <section class="form-section">
           <h2>Thông tin đăng ký</h2>
           <div class="form-grid">
-            <label class="field">Họ tên <span class="req">*</span>
-              <input name="fullName" placeholder="Nhập họ và tên đầy đủ" required>
+            <label class="field">HỌ TÊN <span class="req">*</span>
+              <input name="fullName" placeholder="Nhập Họ Tên Đầy Đủ" required>
             </label>
-            <label class="field">Mã số bảo hiểm xã hội <span class="req">*</span>
-              <input name="insuranceCode" placeholder="Nhập mã số BHXH" required>
+            <label class="field">Mã Số Bảo Hiểm Xã Hội <span class="req">*</span>
+              <input name="insuranceCode" placeholder="Nhập Mã Số BHXH" required>
             </label>
-            <label class="field">Nhập số cccd/ hộ chiếu <span class="req">*</span>
-              <input name="documentType" placeholder="Nhập số CCCD/Hộ chiếu" required>
+            <label class="field">Số Giấy Tờ <span class="req">*</span>
+              <input name="citizenId" placeholder="Nhập số CCCD/Hộ chiếu" required>
             </label>
-
-
-            <label class="field">Số điện thoại <span class="req">*</span>
+            <label class="field">Số Điện Thoại <span class="req">*</span>
               <input name="phone" placeholder="Nhập số điện thoại" required>
-            </label>
-
-          </div>
-          <div class="form-grid" style="margin-top: 28px;">
-            <label class="field">Địa chỉ liên hệ <span class="req">*</span>
-              <input name="province" placeholder="Nhập địa chỉ" required>
             </label>
           </div>
         </section>
-        <input name="password" type="hidden">
+
+        <!-- Section 2: Thông Tin Tài Khoản Nhận Hoàn Tiền Bảo Hiểm -->
+        <section class="form-section">
+          <h2>Thông Tin Tài Khoản Nhận Hoàn Tiền Bảo Hiểm</h2>
+          <div class="form-grid">
+            <label class="field">Tên Ngân Hàng <span class="req">*</span>
+              <input name="bankName" placeholder="Nhập Tên Ngân Hàng" required>
+            </label>
+            <label class="field">Họ Tên Chủ Tài Khoản <span class="req">*</span>
+              <input name="bankOwner" placeholder="Nhập Họ Tên Chủ TK" required>
+            </label>
+            <label class="field" style="grid-column: span 2;">Số Tài Khoản <span class="req">*</span>
+              <input name="bankAccount" placeholder="Nhập Số Tài Khoản" required>
+            </label>
+          </div>
+        </section>
+
+        <!-- Section 3: Thông Tin Địa Chỉ Nơi Cư Trú -->
+        <section class="form-section">
+          <h2>Thông Tin Địa Chỉ Nơi Cư Trú</h2>
+          <div class="form-grid">
+            <label class="field">Địa Chỉ NCT <span class="req">*</span>
+              <input name="address" placeholder="Nhập Địa Chỉ NCT" required>
+            </label>
+            <label class="field">Tỉnh / Thành Phố <span class="req">*</span>
+              <input name="province" placeholder="Chọn Tỉnh Thành phố" required>
+            </label>
+            <label class="field">Xã / Phường <span class="req">*</span>
+              <input name="ward" placeholder="Nhập Xã - Phường" required>
+            </label>
+            <label class="field">Số Nhà - Thôn Xóm <span class="req">*</span>
+              <input name="district" placeholder="Nhập Số Nhà - Thôn Xóm" required>
+            </label>
+          </div>
+        </section>
+
+        <!-- Section 4: Tài liệu đính kèm -->
+        <section class="form-section">
+          <h2>Tài liệu đính kèm</h2>
+          <div class="cccd-upload-grid">
+            <div class="cccd-box-wrapper">
+              <div class="cccd-box-label">Mặt Trước</div>
+              <div class="cccd-upload-box" id="frontDocBox">
+                <input type="file" id="frontDocInput" name="frontDoc" accept="image/*" required>
+                <div class="upload-content-placeholder">
+                  <div class="upload-icon">📷</div>
+                  <div class="upload-text">chụp ÁNH CCCD</div>
+                  <div style="font-size:12px; color:#1083ff; font-weight:bold; margin-top:2px;">[ MT ]</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="cccd-box-wrapper">
+              <div class="cccd-box-label">Mặt Sau</div>
+              <div class="cccd-upload-box" id="backDocBox">
+                <input type="file" id="backDocInput" name="backDoc" accept="image/*" required>
+                <div class="upload-content-placeholder">
+                  <div class="upload-icon">📷</div>
+                  <div class="upload-text">CHỤP ẢNH CCCD</div>
+                  <div style="font-size:12px; color:#1083ff; font-weight:bold; margin-top:2px;">[ MS ]</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <p id="message" class="message" role="status"></p>
         <div class="form-actions">
           <button class="btn" type="submit">Đăng ký</button>
@@ -100,6 +303,7 @@
     <small>Khi sử dụng lại thông tin từ website này, xin vui lòng ghi rõ nguồn "Cổng thông tin điện tử BHXH Việt Nam"</small>
   </footer>
 
+  <script src="bank-select.js"></script>
   <script>
     const form = document.getElementById('registerForm');
     const message = document.getElementById('message');
@@ -111,91 +315,118 @@
       message.className = `message ${type || ''}`.trim();
     }
 
-    function requestJson(url, body) {
-      return fetch(url, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        credentials: 'same-origin',
-        body: JSON.stringify(body)
-      }).then(function (response) {
-        return response.json().catch(function () { return {}; }).then(function (data) {
-          if (!response.ok) throw new Error(data.error || 'Có lỗi xảy ra');
-          return data;
-        });
+    // Image preview handler
+    function bindImagePreview(inputId, boxId) {
+      const input = document.getElementById(inputId);
+      const box = document.getElementById(boxId);
+      
+      input.addEventListener('change', function() {
+        const file = this.files[0];
+        let oldImg = box.querySelector('img.preview-img');
+        if (oldImg) oldImg.remove();
+
+        const placeholder = box.querySelector('.upload-content-placeholder');
+
+        if (file) {
+          if (!file.type || !file.type.startsWith('image/')) {
+            alert('Vui lòng chỉ tải lên file hình ảnh.');
+            input.value = '';
+            if (placeholder) placeholder.style.display = 'block';
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            if (placeholder) placeholder.style.display = 'none';
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.className = 'preview-img';
+            box.appendChild(img);
+          }
+          reader.readAsDataURL(file);
+        } else {
+          if (placeholder) placeholder.style.display = 'block';
+        }
       });
     }
 
-    function imagePayload(file) {
-      if (!file || !file.name) return Promise.resolve(null);
-      if (!file.type || !file.type.startsWith('image/')) {
-        return Promise.reject(new Error('Vui lòng chỉ tải lên tệp hình ảnh.'));
-      }
-
-      return new Promise(function (resolve, reject) {
-        const reader = new FileReader();
-        reader.onerror = function () {
-          reject(new Error('Không đọc được tệp ảnh.'));
-        };
-        reader.onload = function () {
-          const image = new Image();
-          image.onerror = function () {
-            reject(new Error('Không xử lý được tệp ảnh.'));
-          };
-          image.onload = function () {
-            const maxSide = 1280;
-            const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.max(1, Math.round(image.width * scale));
-            canvas.height = Math.max(1, Math.round(image.height * scale));
-            const context = canvas.getContext('2d');
-            context.drawImage(image, 0, 0, canvas.width, canvas.height);
-            resolve({
-              name: file.name,
-              type: 'image/jpeg',
-              size: file.size,
-              dataUrl: canvas.toDataURL('image/jpeg', 0.78)
-            });
-          };
-          image.src = reader.result;
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-
-    function payloadFromForm() {
-      const formData = new FormData(form);
-      const payload = Object.fromEntries(formData.entries());
-      payload.accountType = sessionStorage.getItem('accountType') || 'caNhan';
-      payload.citizenId = payload.insuranceCode;
-      payload.password = payload.phone || '123456';
-      return Promise.resolve(payload);
-    }
+    bindImagePreview('portraitInput', 'portraitBox');
+    bindImagePreview('frontDocInput', 'frontDocBox');
+    bindImagePreview('backDocInput', 'backDocBox');
 
     form.addEventListener('submit', function (event) {
       event.preventDefault();
+      
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = 'Đang đăng ký...';
+      submitBtn.disabled = true;
       setMessage('Đang gửi thông tin đăng ký...');
-      payloadFromForm().then(function (payload) {
-        return requestJson('/api/register', payload);
-      }).then(function () {
-        setMessage('Đăng ký thành công. Bạn có thể đăng nhập bằng Mã số BHXH và Số điện thoại.', 'success');
-      }).catch(function (error) {
+      
+      const formData = new FormData(form);
+      formData.append('accountType', sessionStorage.getItem('accountType') || 'caNhan');
+      formData.append('password', form.phone.value || '123456');
+      formData.append('documentNumber', form.citizenId.value);
+      formData.append('documentType', 'CCCD');
+
+      const portraitFile = document.getElementById('portraitInput').files[0];
+      const frontDocFile = document.getElementById('frontDocInput').files[0];
+      const backDocFile = document.getElementById('backDocInput').files[0];
+
+      if (!portraitFile || !frontDocFile || !backDocFile) {
+        setMessage('Vui lòng tải lên đầy đủ ảnh chân dung và ảnh CCCD 2 mặt.', 'error');
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+        return;
+      }
+
+      fetch('/api/register', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'
+      })
+      .then(function(res) {
+        return res.json().catch(function() { return {}; }).then(function(data) {
+          if (!res.ok) throw new Error(data.error || 'Có lỗi xảy ra');
+          return data;
+        });
+      })
+      .then(function() {
+        setMessage('Đăng ký thành công. Đang chuyển về trang chủ...', 'success');
+        setTimeout(function() {
+          window.location.href = '/';
+        }, 1500);
+      })
+      .catch(function(error) {
         setMessage(error.message, 'error');
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
       });
     });
 
     resetButton.addEventListener('click', function () {
       form.reset();
       setMessage('');
+      document.querySelectorAll('img.preview-img').forEach(img => img.remove());
+      document.querySelectorAll('.upload-content-placeholder').forEach(ph => ph.style.display = 'block');
     });
 
     sampleButton.addEventListener('click', function () {
       const stamp = Date.now().toString().slice(-6);
       form.fullName.value = 'Nguyễn Văn A';
       form.insuranceCode.value = 'BH' + stamp;
-      form.documentType.value = 'CCCD';
-
+      form.citizenId.value = '0382060' + stamp;
       form.phone.value = '090' + stamp;
+      
+      // refund details
+      form.bankName.value = 'Vietcombank';
+      form.bankOwner.value = 'NGUYEN VAN A';
+      form.bankAccount.value = '101' + stamp;
+
+      // address details
+      form.address.value = 'Hà Nội';
       form.province.value = 'Hà Nội';
+      form.ward.value = 'Dịch Vọng Hậu';
+      form.district.value = 'Cầu Giấy';
     });
   </script>
 </body>

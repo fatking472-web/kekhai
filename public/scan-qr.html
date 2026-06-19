@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tích điểm</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #1a237e 0%, #0d1642 100%);
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: transparent;
+            color: white;
+            position: relative;
+            z-index: 10;
+        }
+
+        .back-button {
+            font-size: 24px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .help-button {
+            color: white;
+            font-size: 24px;
+        }
+
+        .scanner-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .scan-frame {
+            width: 280px;
+            height: 280px;
+            background-color: #000;
+            border-radius: 10px;
+            position: relative;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .scan-corner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #007AFF;
+            position: absolute;
+            z-index: 5;
+        }
+
+        .top-left { 
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .top-right {
+            top: -2px;
+            right: -2px;
+            border-left: none;
+            border-bottom: none;
+        }
+
+        .bottom-left {
+            bottom: -2px;
+            left: -2px;
+            border-right: none;
+            border-top: none;
+        }
+
+        .bottom-right {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .scan-text {
+            color: white;
+            text-align: center;
+            margin: 15px 0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .flash-button {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s;
+        }
+        
+        .flash-button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .flash-icon {
+            color: white;
+            font-size: 24px;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 15px;
+            padding: 15px;
+            gap: 8px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: #3b82f6;
+        }
+
+        .nav-item.inactive {
+            color: #9ca3af;
+        }
+
+        .nav-item:first-child {
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .scanning-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, 
+                transparent 0%,
+                #007AFF 20%,
+                #007AFF 80%,
+                transparent 100%
+            );
+            animation: scan 2s linear infinite;
+            box-shadow: 0 0 8px rgba(0, 122, 255, 0.8);
+            z-index: 4;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0;
+            }
+            50% {
+                top: 100%;
+            }
+            100% {
+                top: 0;
+            }
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 130px 80px, #fff, rgba(0,0,0,0));
+            background-size: 200px 200px;
+            animation: stars 4s linear infinite;
+        }
+
+        @keyframes stars {
+            from { transform: translateY(0); }
+            to { transform: translateY(-200px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+    
+    <div class="header">
+        <a href="/" class="back-button">×</a>
+        <h1 class="title">Tích điểm</h1>
+        <a href="#" class="help-button" style="text-decoration:none;">🎧</a>
+    </div>
+
+    <div class="scanner-container">
+        <div class="scan-frame">
+            <video id="video" playsinline></video>
+            <div class="scan-corner top-left"></div>
+            <div class="scan-corner top-right"></div>
+            <div class="scan-corner bottom-left"></div>
+            <div class="scan-corner bottom-right"></div>
+            <div class="scanning-line"></div>
+        </div>
+
+        <div class="scan-text">
+            Căn chỉnh mã QR vào vị trí trong khung hình.
+        </div>
+
+        <button class="flash-button">
+            <span class="flash-icon">⚡️</span>
+        </button>
+        <div class="scan-text" id="flashText" style="margin-top: 5px;">Chạm để bật</div>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-item inactive" onclick="location.href='/my-qr'">
+            <span>🗂️</span>
+            <span>Mã của bạn</span>
+        </button>
+        <button class="nav-item active" onclick="location.href='/scan-qr'">
+            <span>🔲</span>
+            <span>Quét mã</span>
+        </button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('video');
+            const flashButton = document.querySelector('.flash-button');
+            const flashText = document.getElementById('flashText');
+            let stream = null;
+            let flashEnabled = false;
+
+            // Access camera stream
+            async function startCamera() {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: { 
+                            facingMode: 'environment',
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        }
+                    });
+                    video.srcObject = stream;
+                    await video.play();
+                } catch (err) {
+                    console.error('Không thể truy cập camera:', err);
+                    // Standard fallback text if camera is blocked/unavailable
+                    video.style.background = '#222';
+                    const placeholderText = document.createElement('div');
+                    placeholderText.style.cssText = 'position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#aaa; font-size:14px; text-align:center; width:80%;';
+                    placeholderText.textContent = 'Camera không khả dụng';
+                    video.parentElement.appendChild(placeholderText);
+                }
+            }
+
+            // Flash control
+            flashButton.addEventListener('click', async function() {
+                if (!stream) return;
+                
+                const track = stream.getVideoTracks()[0];
+                const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+                
+                if (capabilities.torch) {
+                    flashEnabled = !flashEnabled;
+                    try {
+                        await track.applyConstraints({
+                            advanced: [{ torch: flashEnabled }]
+                        });
+                        flashText.textContent = flashEnabled ? 'Chạm để tắt' : 'Chạm để bật';
+                    } catch (err) {
+                        console.error('Không thể điều khiển đèn flash:', err);
+                    }
+                } else {
+                    alert('Thiết bị hoặc trình duyệt không hỗ trợ đèn flash');
+                }
+            });
+
+            startCamera();
+        });
+    </script>
+</body>
+</html>

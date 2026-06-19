@@ -7443,10 +7443,6 @@ ul[_ngcontent-c13] {
       password: soCCCD.trim()
     }).then(function (data) {
       showLocalToast('success', 'Đăng nhập thành công.');
-      if (data.user && data.user.role === 'admin') {
-        // Removed: Normal users shouldn't have admin role, and admin logs in elsewhere.
-        return;
-      }
       var modalLogin = document.getElementById('modal-login');
       if (modalLogin) modalLogin.style.display = 'none';
       setTimeout(function() { window.location.reload(); }, 1000);

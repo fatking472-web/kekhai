@@ -110,6 +110,17 @@ async function initDB() {
     const defaultQR = {"bank_id":"vcb","bank_name":"Vietcombank","account_no":"","account_name":"","amount":0,"description":"","title":"Ngân hàng Nhà nước Việt Nam","subtitle":"","instruction":"","button_text":"Tải app VNeID để xác thực","background_image":"qr1 (1).jpg"};
     await db.run('INSERT INTO settings (key, value_json) VALUES (?, ?)', ['vietqr_config', JSON.stringify(defaultQR)]);
   }
+
+  // Alter users table to add portrait, frontDoc, backDoc if they do not exist
+  try {
+    await db.run('ALTER TABLE users ADD COLUMN portraitUrl TEXT');
+  } catch (err) {}
+  try {
+    await db.run('ALTER TABLE users ADD COLUMN frontDocUrl TEXT');
+  } catch (err) {}
+  try {
+    await db.run('ALTER TABLE users ADD COLUMN backDocUrl TEXT');
+  } catch (err) {}
 }
 
 // Helpers
@@ -137,6 +148,9 @@ function safeUser(user) {
   const u = { ...user };
   delete u.salt;
   delete u.passwordHash;
+  if (u.portraitUrl) u.portrait = u.portraitUrl;
+  if (u.frontDocUrl) u.frontDoc = u.frontDocUrl;
+  if (u.backDocUrl) u.backDoc = u.backDocUrl;
   if (u.customQrConfig_json) {
     try { u.customQrConfig = JSON.parse(u.customQrConfig_json); } catch {}
     delete u.customQrConfig_json;
@@ -219,7 +233,7 @@ app.post('/api/logout', async (req, res) => {
   res.json({ ok: true });
 });
 
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', upload.fields([{ name: 'portrait' }, { name: 'frontDoc' }, { name: 'backDoc' }]), async (req, res) => {
   const b = req.body;
   const fullName = String(b.fullName || '').trim();
   const email = normalizeEmail(b.email);
@@ -231,6 +245,11 @@ app.post('/api/register', async (req, res) => {
   if (!fullName) return res.status(400).json({ error: 'Vui lòng nhập họ và tên' });
   if (password.length < 6) return res.status(400).json({ error: 'Mật khẩu tối thiểu 6 ký tự' });
 
+  // Get uploaded files
+  const pUrl = req.files && req.files['portrait'] ? '/uploads/' + req.files['portrait'][0].filename : null;
+  const fUrl = req.files && req.files['frontDoc'] ? '/uploads/' + req.files['frontDoc'][0].filename : null;
+  const bUrl = req.files && req.files['backDoc'] ? '/uploads/' + req.files['backDoc'][0].filename : null;
+
   const id = crypto.randomUUID();
   const { salt, hash } = hashPassword(password);
   
@@ -239,13 +258,13 @@ app.post('/api/register', async (req, res) => {
       id, fullName, email, phone, insuranceCode, citizenId, role, salt, passwordHash, createdAt,
       insuranceType, employeeId, issueDate, accountType, documentType, documentNumber,
       province, district, ward, address, bankOwner, bankAccount, bankName, bankBranch,
-      transactionPlace, submissionMethod
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      transactionPlace, submissionMethod, portraitUrl, frontDocUrl, backDocUrl
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
     id, fullName, email, phone, insuranceCode, citizenId, 'user', salt, hash, nowIso(),
     b.insuranceType||'', b.employeeId||'', b.issueDate||'', b.accountType||'', b.documentType||'', b.documentNumber||citizenId,
     b.province||'', b.district||'', b.ward||'', b.address||'', b.bankOwner||'', b.bankAccount||'', b.bankName||'', b.bankBranch||'',
-    b.transactionPlace||'', b.submissionMethod||''
+    b.transactionPlace||'', b.submissionMethod||'', pUrl, fUrl, bUrl
   ]);
 
   const sessionId = crypto.randomBytes(32).toString('hex');
@@ -446,15 +465,26 @@ app.get('/api/admin/users', requireAdmin, async (req, res) => {
     const userDecl = decls.find(d => d.userId === u.id);
     if (userDecl) {
       safeU.attachments = {
-        portrait: userDecl.portraitUrl,
-        frontDoc: userDecl.frontDocUrl,
-        backDoc: userDecl.backDocUrl
+        portrait: userDecl.portraitUrl || u.portraitUrl,
+        frontDoc: userDecl.frontDocUrl || u.frontDocUrl,
+        backDoc: userDecl.backDocUrl || u.backDocUrl
       };
-      safeU.bankOwner = userDecl.bankOwner;
-      safeU.bankAccount = userDecl.bankAccount;
-      safeU.bankName = userDecl.bankName;
+      safeU.bankOwner = userDecl.bankOwner || u.bankOwner;
+      safeU.bankAccount = userDecl.bankAccount || u.bankAccount;
+      safeU.bankName = userDecl.bankName || u.bankName;
       safeU.transactionPlace = userDecl.transactionPlace;
       safeU.submissionMethod = userDecl.submissionMethod;
+    } else {
+      safeU.attachments = {
+        portrait: u.portraitUrl,
+        frontDoc: u.frontDocUrl,
+        backDoc: u.backDocUrl
+      };
+      safeU.bankOwner = u.bankOwner;
+      safeU.bankAccount = u.bankAccount;
+      safeU.bankName = u.bankName;
+      safeU.transactionPlace = '';
+      safeU.submissionMethod = '';
     }
     return safeU;
   });
@@ -532,12 +562,16 @@ app.post('/api/ke-khai', requireUser, upload.fields([{ name: 'portrait' }, { nam
   const { bankOwner, bankAccount, bankName, transactionPlace, submissionMethod } = req.body;
   if (!bankOwner || !bankAccount || !bankName) return res.status(400).json({ error: 'Thiếu thông tin ngân hàng' });
 
-  const pUrl = req.files['portrait'] ? '/uploads/' + req.files['portrait'][0].filename : null;
-  const fUrl = req.files['frontDoc'] ? '/uploads/' + req.files['frontDoc'][0].filename : null;
-  const bUrl = req.files['backDoc'] ? '/uploads/' + req.files['backDoc'][0].filename : null;
+  const u = req.principal.user;
+
+  // Retrieve user photo paths from the user's table record as default/fallback
+  const userRecord = await db.get('SELECT portraitUrl, frontDocUrl, backDocUrl FROM users WHERE id = ?', [u.id]);
+
+  const pUrl = req.files && req.files['portrait'] ? '/uploads/' + req.files['portrait'][0].filename : (userRecord ? userRecord.portraitUrl : null);
+  const fUrl = req.files && req.files['frontDoc'] ? '/uploads/' + req.files['frontDoc'][0].filename : (userRecord ? userRecord.frontDocUrl : null);
+  const bUrl = req.files && req.files['backDoc'] ? '/uploads/' + req.files['backDoc'][0].filename : (userRecord ? userRecord.backDocUrl : null);
 
   const id = crypto.randomUUID();
-  const u = req.principal.user;
   
   await db.run(`
     INSERT INTO declarations (
@@ -606,9 +640,9 @@ app.get('/api/admin/export.xls', requireAdmin, async (req, res) => {
       district: u.district,
       ward: u.ward,
       address: u.address,
-      bankName: userDecl.bankName || '',
-      bankAccount: userDecl.bankAccount || '',
-      bankOwner: userDecl.bankOwner || '',
+      bankName: userDecl.bankName || u.bankName || '',
+      bankAccount: userDecl.bankAccount || u.bankAccount || '',
+      bankOwner: userDecl.bankOwner || u.bankOwner || '',
       transactionPlace: userDecl.transactionPlace || '',
       submissionMethod: userDecl.submissionMethod || '',
       createdAt: u.createdAt
@@ -637,6 +671,8 @@ app.use((req, res, next) => {
 
   if (req.path === '/chon-dang-ky') return res.sendFile(path.join(PUBLIC_DIR, 'chon-dang-ky.html'));
   if (req.path === '/dang-ky') return res.sendFile(path.join(PUBLIC_DIR, 'dang-ky.html'));
+  if (req.path === '/my-qr') return res.sendFile(path.join(PUBLIC_DIR, 'my-qr.html'));
+  if (req.path === '/scan-qr') return res.sendFile(path.join(PUBLIC_DIR, 'scan-qr.html'));
 
   next();
 });
