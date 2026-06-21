@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- ECA logo - colorful letters -->
+  <text x="15" y="58" font-family="Arial Black, Arial" font-size="48" font-weight="900">
+    <tspan fill="#FF6600">E</tspan><tspan fill="#0066CC">C</tspan><tspan fill="#009900">A</tspan>
+  </text>
+</svg>

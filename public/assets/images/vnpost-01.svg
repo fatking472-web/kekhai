@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- Vietnam Post - orange/yellow logo -->
+  <polygon points="28,60 42,20 56,60" fill="#FF6600"/>
+  <polygon points="44,55 58,20 72,55" fill="#FF9900"/>
+  <text x="85" y="42" font-family="Arial Black, Arial" font-size="14" font-weight="900" fill="#FF6600">VIETNAM</text>
+  <text x="85" y="60" font-family="Arial Black, Arial" font-size="14" font-weight="900" fill="#FF6600">POST</text>
+</svg>

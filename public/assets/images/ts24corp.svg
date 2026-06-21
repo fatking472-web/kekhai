@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- TS24 CORP logo -->
+  <text x="10" y="52" font-family="Arial Black, Arial" font-size="32" font-weight="900" fill="#003399" letter-spacing="-2">TS24</text>
+  <text x="115" y="52" font-family="Arial" font-size="20" font-weight="bold" fill="#333">CORP</text>
+</svg>

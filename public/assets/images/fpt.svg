@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- FPT logo - colorful -->
+  <text x="15" y="56" font-family="Arial Black, Arial" font-size="46" font-weight="900" letter-spacing="-3">
+    <tspan fill="#FF6600">F</tspan><tspan fill="#0066CC">P</tspan><tspan fill="#009900">T</tspan>
+  </text>
+  <circle cx="150" cy="38" r="6" fill="#FF6600" opacity="0.6"/>
+  <circle cx="163" cy="38" r="6" fill="#0066CC" opacity="0.6"/>
+  <circle cx="176" cy="38" r="6" fill="#009900" opacity="0.6"/>
+</svg>

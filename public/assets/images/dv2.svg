@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- VNPT CA logo - blue text -->
+  <text x="60" y="40" font-family="Arial Black, Arial" font-size="22" font-weight="900" fill="#003399" letter-spacing="-1">VNPT</text>
+  <rect x="125" y="18" width="36" height="36" rx="4" fill="#003399"/>
+  <text x="143" y="44" text-anchor="middle" font-family="Arial" font-size="18" font-weight="bold" fill="white">CA</text>
+  <text x="100" y="68" text-anchor="middle" font-family="Arial" font-size="9" fill="#003399">An toàn lưu giữ dịch</text>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- Bkav CA logo -->
+  <path d="M20,55 L20,20 Q20,15 25,15 L45,15 Q55,15 55,25 Q55,32 48,35 Q58,38 58,48 Q58,60 45,60 L25,60 Q20,60 20,55Z" fill="#003399"/>
+  <text x="70" y="48" font-family="Arial Black, Arial" font-size="24" font-weight="900" fill="#003399">Bkav</text>
+  <rect x="148" y="22" width="38" height="30" rx="4" fill="#003399"/>
+  <text x="167" y="43" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="white">CA</text>
+</svg>

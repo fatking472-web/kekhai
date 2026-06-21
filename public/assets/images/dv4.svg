@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- EFY logo - red/pink brand -->
+  <text x="30" y="48" font-family="Arial Black, Arial" font-size="30" font-weight="900" fill="#cc1144">EFY</text>
+  <path d="M110,20 L130,40 L110,60 L90,40 Z" fill="#cc1144" opacity="0.2"/>
+  <path d="M110,25 L125,40 L110,55 L95,40 Z" fill="none" stroke="#cc1144" stroke-width="2"/>
+  <text x="140" y="48" font-family="Arial" font-size="16" fill="#333">Tech</text>
+</svg>

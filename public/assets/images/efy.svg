@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- EFY-CA logo - circular key -->
+  <circle cx="40" cy="38" r="25" fill="none" stroke="#cc4400" stroke-width="3"/>
+  <circle cx="40" cy="38" r="16" fill="#cc4400" opacity="0.2"/>
+  <text x="40" y="46" text-anchor="middle" font-family="Arial Black, Arial" font-size="16" font-weight="900" fill="#cc4400">EFY</text>
+  <text x="80" y="38" font-family="Arial Black, Arial" font-size="22" font-weight="900" fill="#cc4400">EFY</text>
+  <text x="80" y="56" font-family="Arial" font-size="14" fill="#333">-CA</text>
+  <text x="80" y="70" font-family="Arial" font-size="8" fill="#666">www.efyca.vn</text>
+</svg>

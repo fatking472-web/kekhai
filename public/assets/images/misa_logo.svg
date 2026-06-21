@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- MISA logo - red M with circle -->
+  <circle cx="35" cy="38" r="25" fill="#cc0000" opacity="0.15"/>
+  <text x="22" y="52" font-family="Arial Black, Arial" font-size="36" font-weight="900" fill="#cc0000">M</text>
+  <text x="68" y="38" font-family="Arial Black, Arial" font-size="24" font-weight="900" fill="#cc0000">ISA</text>
+  <text x="20" y="70" font-family="Arial" font-size="8" fill="#333">TIN CẬY-TIỆN ÍCH-TẬN TÌNH</text>
+</svg>

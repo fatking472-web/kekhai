@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- CAVN logo -->
+  <text x="100" y="45" text-anchor="middle" font-family="Arial Black, Arial" font-size="26" font-weight="900" fill="#003399">CAVN</text>
+  <text x="100" y="62" text-anchor="middle" font-family="Arial" font-size="10" fill="#666">Chứng thực số</text>
+</svg>

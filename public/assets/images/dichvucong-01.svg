@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 153.12 46.51">
+<defs><style>
+.tb { fill:#fff; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; font-weight:900; font-size:20px; }
+.tl { fill:#fff; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; font-weight:300; font-size:19px; }
+</style></defs>
+<!-- Globe - light blue -->
+<g transform="translate(4,4)">
+  <circle cx="17" cy="17" r="17" fill="none" stroke="#81D4FA" stroke-width="2"/>
+  <ellipse cx="17" cy="17" rx="8" ry="17" fill="none" stroke="#81D4FA" stroke-width="1.5"/>
+  <line x1="0" y1="17" x2="34" y2="17" stroke="#81D4FA" stroke-width="1.5"/>
+  <path d="M3,10 Q17,14 31,10" fill="none" stroke="#81D4FA" stroke-width="1"/>
+  <path d="M3,24 Q17,20 31,24" fill="none" stroke="#81D4FA" stroke-width="1"/>
+</g>
+<text x="46" y="17" class="tb">DỊCH VỤ</text>
+<text x="46" y="33" class="tb">CÔNG</text>
+<text x="46" y="47" class="tl" font-size="15">TRỰC TUYẾN</text>
+</svg>

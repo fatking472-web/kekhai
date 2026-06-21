@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- SmartSign logo - S in circle -->
+  <circle cx="35" cy="38" r="25" fill="none" stroke="#333" stroke-width="2"/>
+  <text x="35" y="47" text-anchor="middle" font-family="Arial Black, Arial" font-size="28" font-weight="900" fill="#333">S</text>
+  <text x="75" y="35" font-family="Arial Italic, Arial" font-size="18" font-style="italic" fill="#333">Smart</text>
+  <text x="75" y="55" font-family="Arial Italic, Arial" font-size="18" font-style="italic" fill="#333">Sign</text>
+  <text x="75" y="70" font-family="Arial" font-size="9" fill="#999">Trust your creation</text>
+</svg>

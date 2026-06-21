@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- ONE-CA logo - red circle with 1 -->
+  <circle cx="35" cy="38" r="28" fill="#cc0000"/>
+  <text x="35" y="50" text-anchor="middle" font-family="Arial Black, Arial" font-size="28" font-weight="900" fill="white">1</text>
+  <text x="75" y="48" font-family="Arial Black, Arial" font-size="26" font-weight="900" fill="#cc0000">NE-CA</text>
+</svg>

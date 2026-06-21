@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- Cyber Lotus logo -->
+  <path d="M25,55 Q15,38 25,22 Q35,10 45,22 Q55,10 65,22 Q75,10 75,38 Q65,55 50,65 Q35,55 25,55Z" fill="#cc0044" opacity="0.2"/>
+  <path d="M35,50 Q25,38 35,25 Q45,15 55,25 Q60,15 68,25 Q70,38 60,50 Q50,60 42,55Z" fill="none" stroke="#cc0044" stroke-width="2"/>
+  <text x="85" y="38" font-family="Arial Black, Arial" font-size="14" font-weight="bold" fill="#333">CYBER</text>
+  <text x="85" y="56" font-family="Arial Black, Arial" font-size="14" font-weight="bold" fill="#cc0044">LOTUS</text>
+  <text x="20" y="72" font-family="Arial" font-size="7" fill="#666">HỢP TÁC CÔNG NGHỆ SỐ TIN CẬY</text>
+</svg>

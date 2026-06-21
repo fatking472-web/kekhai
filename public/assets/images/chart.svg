@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Pie chart center at 100,100, radius 80 -->
+  <!-- Segment 1: Thu BHXH, BHYT, BHTN ~60% - Orange #ff7712 -->
+  <path d="M100,100 L100,20 A80,80 0 1,1 24,140 Z" fill="#ff7712"/>
+  
+  <!-- Segment 2: Thực hiện chính sách BHXH ~20% - Purple #a40bf4 -->
+  <path d="M100,100 L24,140 A80,80 0 0,1 40,50 Z" fill="#a40bf4"/>
+  
+  <!-- Segment 3: Cấp sổ BHXH, thẻ BHYT ~10% - Red #d8001f -->
+  <path d="M100,100 L40,50 A80,80 0 0,1 70,25 Z" fill="#d8001f"/>
+  
+  <!-- Segment 4: Chi trả các chế độ BHXH ~10% - Teal #00ffbc -->
+  <path d="M100,100 L70,25 A80,80 0 0,1 100,20 Z" fill="#00ffbc"/>
+  
+  <!-- Center circle cutout to make it look like a neat donut or solid center -->
+  <circle cx="100" cy="100" r="6" fill="#113160"/>
+</svg>

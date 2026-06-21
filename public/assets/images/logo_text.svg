@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60">
+  <rect width="200" height="60" fill="transparent"/>
+  <!-- BHXH header logo text -->
+  <text x="10" y="30" font-family="Arial Black, Arial" font-size="16" font-weight="900" fill="#ffffff">BẢO HIỂM XÃ HỘI</text>
+  <text x="10" y="50" font-family="Arial" font-size="12" fill="#aaccff">VIỆT NAM</text>
+</svg>

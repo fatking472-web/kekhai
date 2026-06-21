@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- I-CA logo - lock circle -->
+  <circle cx="50" cy="38" r="28" fill="none" stroke="#333" stroke-width="3"/>
+  <rect x="38" y="32" width="24" height="20" rx="3" fill="#333"/>
+  <path d="M42,32 L42,28 Q42,22 50,22 Q58,22 58,28 L58,32" fill="none" stroke="#333" stroke-width="3"/>
+  <circle cx="50" cy="42" r="3" fill="white"/>
+  <text x="88" y="48" font-family="Arial Black, Arial" font-size="24" font-weight="900" fill="#333">I-CA</text>
+</svg>

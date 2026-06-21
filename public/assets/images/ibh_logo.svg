@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- IBH Insurance logo - blue parallelogram -->
+  <polygon points="15,60 35,20 155,20 135,60" fill="#003399"/>
+  <text x="85" y="47" text-anchor="middle" font-family="Arial Black, Arial" font-size="22" font-weight="900" fill="white" letter-spacing="2">IBH</text>
+  <text x="145" y="60" font-family="Arial" font-size="10" fill="#003399">INSURANCE</text>
+</svg>

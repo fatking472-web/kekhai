@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- Viettel CA 2 -->
+  <text x="10" y="38" font-family="Arial Black, Arial" font-size="20" font-weight="900" fill="#cc0000">VIETTEL</text>
+  <rect x="10" y="46" width="180" height="2" fill="#cc0000" opacity="0.3"/>
+  <text x="10" y="65" font-family="Arial" font-size="12" fill="#cc0000">DỊCH VỤ CHỮ KÝ SỐ</text>
+</svg>

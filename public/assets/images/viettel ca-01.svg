@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- Viettel-CA logo -->
+  <text x="10" y="38" font-family="Arial Black, Arial" font-size="20" font-weight="900" fill="#cc0000" letter-spacing="-0.5">VIETTEL</text>
+  <text x="10" y="58" font-family="Arial" font-size="11" fill="#cc0000">DỊCH VỤ CHỮ KÝ SỐ VIETTEL</text>
+  <rect x="145" y="22" width="40" height="30" rx="4" fill="#cc0000"/>
+  <text x="165" y="43" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="white">CA</text>
+</svg>

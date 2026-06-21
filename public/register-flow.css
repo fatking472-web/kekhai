@@ -14,25 +14,15 @@ a { color: inherit; text-decoration: none; }
   top: 0;
   z-index: 1000;
   overflow: hidden;
-  background-color: #0f8ed8;
-  background-image:
-    linear-gradient(90deg, rgba(0, 105, 175, .28), rgba(19, 147, 221, .88) 36%, rgba(15, 142, 216, .96)),
-    url("https://kekhaibaohiem.cc/assets/images/bg-header.png");
+  background-color: #0b6bc2;
+  background-image: url("/assets/images/trong_dong_bg.svg");
   background-position: center;
-  background-size: cover;
+  background-size: 800px 800px;
   background-repeat: no-repeat;
   color: #fff;
 }
 .site-header::before {
-  content: "";
-  position: absolute;
-  inset: -30px 144px -24px 148px;
-  opacity: .18;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 43% 48%, transparent 0 56px, rgba(0, 89, 154, .78) 57px 59px, transparent 60px),
-    radial-gradient(circle at 43% 48%, transparent 0 90px, rgba(0, 89, 154, .58) 90px 93px, transparent 94px),
-    repeating-linear-gradient(63deg, transparent 0 27px, rgba(0, 94, 160, .58) 28px 30px, transparent 31px 58px);
+  display: none;
 }
 .header-inner {
   height: 100%;
@@ -390,13 +380,13 @@ a { color: inherit; text-decoration: none; }
   .step-row { margin: 0 0 20px; }
   .step { font-size: 13px; gap: 5px; }
   .step-dot { width: 22px; height: 22px; font-size: 12px; }
-  .declaration-card { width: 100%; padding: 12px 10px 18px; }
+  .declaration-card { width: 100%; padding: 12px 10px 18px !important; margin: 15px auto !important; }
   .declaration-card h1 { font-size: 18px; margin-bottom: 16px; }
-  .form-section { padding: 14px 12px 18px; }
-  .form-section h2 { font-size: 16px; }
-  .form-grid, .form-grid.three, .upload-grid { grid-template-columns: 1fr; }
+  .form-section, .kk-section { padding: 14px 12px 18px !important; }
+  .form-section h2, .kk-section h4 { font-size: 16px; }
+  .form-grid, .form-grid.three, .upload-grid, .kk-grid, .kk-images { grid-template-columns: 1fr !important; }
   .field input, .field select { height: 44px; font-size: 14px; padding: 0 12px; }
-  .field { font-size: 13px; gap: 7px; }
+  .field, .kk-field { font-size: 13px; gap: 7px; }
   .form-actions { flex-direction: column; gap: 8px; }
   .form-actions .btn { width: 100%; min-width: 0; height: 44px; font-size: 15px; }
   .radio-line { gap: 16px; margin: 10px 0 14px; }

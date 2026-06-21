@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <rect width="200" height="80" fill="white"/>
+  <!-- NCC-CA logo in blue/red -->
+  <text x="15" y="52" font-family="Arial Black, Arial" font-size="34" font-weight="900">
+    <tspan fill="#003399">NC</tspan><tspan fill="#cc0000">CA</tspan>
+  </text>
+</svg>
