@@ -6560,7 +6560,7 @@ ul[_ngcontent-c13] {
         display: flex !important;
         align-items: center !important;
         justify-content: flex-start !important;
-        padding: 0 !important;
+        padding: 0 0 0 16px !important;
         position: static !important;
     }
     /* Cột nút đăng nhập/đăng ký */
@@ -6576,6 +6576,12 @@ ul[_ngcontent-c13] {
         height: auto !important;
         transform: none !important;
         margin-left: 0 !important;
+    }
+    /* Căn giữa dọc cho link logo */
+    a.header-logo-link {
+        display: flex !important;
+        align-items: center !important;
+        height: 100% !important;
     }
     /* ke-khai-nav: bỏ absolute, căn giữa dọc */
     .banner .ke-khai-nav.right,
@@ -6646,10 +6652,24 @@ ul[_ngcontent-c13] {
         }
         .banner .ke-khai-nav.right .sub-nav {
             gap: 4px !important;
+            overflow: hidden !important;
+            max-width: 100% !important;
+            flex-wrap: nowrap !important;
         }
         .banner .ke-khai-nav.right .sub-nav .btn {
             padding: 5px 8px !important;
             font-size: 12px !important;
+        }
+        /* Khi đã đăng nhập: thu gọn username trên mobile */
+        .banner .ke-khai-nav.right .sub-nav .auth-username {
+            max-width: 90px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            font-size: 12px !important;
+        }
+        .pot-header .col-10.col-sm-10.col-md-6 {
+            overflow: hidden !important;
         }
 
         /* IVAN Logos 2 columns */
@@ -7896,9 +7916,13 @@ function downloadVietQR() {
           var authNav = document.querySelector('.sub-nav');
           if (authNav) {
             var userName = data.principal.user ? (data.principal.user.fullName || data.principal.user.username || data.principal.user.id) : data.principal.id;
-            authNav.innerHTML = '<a href="javascript:void(0)" style="color:white; display:flex; align-items:center; text-decoration:none; padding: 0 15px;"><svg xmlns="http://www.w3.org/2000/svg" style="width:20px; height:20px; margin-right:8px;" fill="none" viewBox="0 0 24 24" stroke="white"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> <span style="font-size: 14px;">Tài khoản (' + userName + ')</span></a> <a href="javascript:void(0)" onclick="logoutUser(event)" style="color:#ffcccc; margin-left:15px; text-decoration:none; font-size: 14px; padding: 0 15px; border-left: 1px solid rgba(255,255,255,0.3);">Đăng xuất</a>';
+            var isMobile = window.innerWidth <= 768;
+            authNav.innerHTML = '<a href="javascript:void(0)" style="color:white; display:flex; align-items:center; text-decoration:none; padding: 0 8px; min-width:0; overflow:hidden;"><svg xmlns="http://www.w3.org/2000/svg" style="width:18px; height:18px; margin-right:5px; flex-shrink:0;" fill="none" viewBox="0 0 24 24" stroke="white"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg><span class="auth-username" style="font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:' + (isMobile ? '90px' : '160px') + ';">' + userName + '</span></a><a href="javascript:void(0)" onclick="logoutUser(event)" style="color:#ffcccc; margin-left:8px; text-decoration:none; font-size:13px; padding: 0 8px; border-left: 1px solid rgba(255,255,255,0.3); white-space:nowrap; flex-shrink:0;">Đăng xuất</a>';
             authNav.style.display = 'flex';
             authNav.style.alignItems = 'center';
+            authNav.style.flexWrap = 'nowrap';
+            authNav.style.overflow = 'hidden';
+            authNav.style.maxWidth = '100%';
           }
         }
       })
