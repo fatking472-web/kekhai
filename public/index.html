@@ -6462,7 +6462,7 @@ ul[_ngcontent-c13] {
     }
     @media (max-width: 480px) {
         .wrapped-thumbnail .box-logo {
-            flex: 0 1 calc(100% - 15px) !important;
+            flex: 0 1 calc(50% - 15px) !important;
         }
     }
 </style>
@@ -6533,7 +6533,195 @@ ul[_ngcontent-c13] {
     }
     @media (max-width: 480px) {
         .wrapped-thumbnail .box-logo {
-            flex: 0 1 calc(100% - 15px) !important;
+            flex: 0 1 calc(50% - 15px) !important;
+            min-width: 0 !important;
+        }
+    }
+    /* Fix for Header overlap, IVAN Logos 2-column, and Footer Chức Năng wrapping */
+    /* Base Styles for Footer */
+    ._chuc-nang .wrapped-thumbnail ul li {
+        flex: 1 1 25% !important;
+        max-width: 25% !important;
+    }
+
+    /* ===== HEADER FIX - ALL DEVICES ===== */
+    /* Áp dụng cho mọi thiết bị: desktop, tablet, mobile */
+    .banner .pot-header .row,
+    .pot-header .row {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        flex-wrap: nowrap !important;
+        height: 100% !important;
+    }
+    /* Cột logo */
+    .pot-header .col-2.col-sm-2.col-md-6 {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        padding: 0 !important;
+        position: static !important;
+    }
+    /* Cột nút đăng nhập/đăng ký */
+    .pot-header .col-10.col-sm-10.col-md-6 {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        padding: 0 !important;
+        position: static !important;
+    }
+    .header-logo-link img {
+        max-width: 100% !important;
+        height: auto !important;
+        transform: none !important;
+        margin-left: 0 !important;
+    }
+    /* ke-khai-nav: bỏ absolute, căn giữa dọc */
+    .banner .ke-khai-nav.right,
+    .banner[_ngcontent-c4] .ke-khai-nav.right[_ngcontent-c4] {
+        position: static !important;
+        float: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        right: auto !important;
+        bottom: auto !important;
+        top: auto !important;
+        transform: none !important;
+        height: auto !important;
+    }
+    /* sub-nav: luôn hiển thị hàng ngang */
+    .banner .ke-khai-nav.right .sub-nav,
+    .banner[_ngcontent-c4] .right[_ngcontent-c4] .sub-nav[_ngcontent-c4] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding-top: 0 !important;
+    }
+    .banner .ke-khai-nav.right .sub-nav a {
+        display: inline-flex !important;
+        align-items: center !important;
+        flex-shrink: 0 !important;
+        margin-right: 0 !important;
+    }
+    .banner .ke-khai-nav.right .sub-nav .btn {
+        white-space: nowrap !important;
+    }
+
+    /* ===== RESPONSIVE ADJUSTMENTS ===== */
+    /* Desktop (> 768px): kích thước đầy đủ */
+    @media (min-width: 769px) {
+        .pot-header .col-2.col-sm-2.col-md-6 {
+            flex: 0 0 50% !important;
+            max-width: 50% !important;
+        }
+        .pot-header .col-10.col-sm-10.col-md-6 {
+            flex: 0 0 50% !important;
+            max-width: 50% !important;
+        }
+        .banner .ke-khai-nav.right .sub-nav .btn {
+            padding: 6px 16px !important;
+            font-size: 15px !important;
+        }
+    }
+
+    /* Fix for Header overlap, IVAN Logos 2-column, and Footer Chức Năng wrapping */
+    @media (max-width: 768px) {
+        /* Mobile: thu nhỏ logo và nút */
+        .pot-header .col-2.col-sm-2.col-md-6 {
+            flex: 0 0 58% !important;
+            max-width: 58% !important;
+            width: 58% !important;
+        }
+        .pot-header .col-10.col-sm-10.col-md-6 {
+            flex: 0 0 42% !important;
+            max-width: 42% !important;
+            width: 42% !important;
+        }
+        .banner .ke-khai-nav.right .sub-nav {
+            gap: 4px !important;
+        }
+        .banner .ke-khai-nav.right .sub-nav .btn {
+            padding: 5px 8px !important;
+            font-size: 12px !important;
+        }
+
+        /* IVAN Logos 2 columns */
+        ._ivan .wrapped-thumbnail ul {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            padding: 0 !important;
+            gap: 0 !important;
+        }
+        ._ivan .wrapped-thumbnail ul li.box-logo {
+            width: calc(50% - 10px) !important;
+            margin: 5px !important;
+            box-sizing: border-box !important;
+            flex: 0 0 calc(50% - 10px) !important;
+            max-width: calc(50% - 10px) !important;
+            min-width: 0 !important;
+        }
+
+        /* Footer Chuc Nang wrapping */
+        ._chuc-nang .wrapped-thumbnail ul {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            gap: 0 !important;
+        }
+        ._chuc-nang .wrapped-thumbnail ul li {
+            width: 50% !important;
+            text-align: center !important;
+            margin-bottom: 15px !important;
+            box-sizing: border-box !important;
+            flex: 0 0 50% !important;
+            max-width: 50% !important;
+        }
+        ._chuc-nang .wrapped-thumbnail ul li img {
+            max-width: 100% !important;
+            height: auto !important;
+            object-fit: contain;
+        }
+    }
+
+    /* ===== CHỨC NĂNG BAR RESPONSIVE ===== */
+    /* Desktop: 4 mục 1 hàng */
+    .chuc-nang-list {
+        overflow-x: hidden !important;
+    }
+    .chuc-nang-item {
+        flex: 1 1 25% !important;
+        min-width: 0 !important;
+    }
+    /* Tablet (≤ 768px): 2x2 */
+    @media (max-width: 768px) {
+        .chuc-nang-item {
+            flex: 0 0 50% !important;
+            max-width: 50% !important;
+        }
+    }
+    /* Mobile nhỏ (≤ 480px): 2x2, thu nhỏ icon và text */
+    @media (max-width: 480px) {
+        .chuc-nang-item {
+            flex: 0 0 50% !important;
+            max-width: 50% !important;
+        }
+        .chuc-nang-item a {
+            gap: 4px !important;
+        }
+        .chuc-nang-item .material-icons {
+            font-size: 22px !important;
+        }
+        .chuc-nang-item span,
+        .chuc-nang-item strong {
+            font-size: 10px !important;
         }
     }
 </style>
@@ -6588,13 +6776,13 @@ ul[_ngcontent-c13] {
                 <div _ngcontent-c4="" class="row" style="height: 100%; align-items: center;">
                     <div _ngcontent-c4="" class="col-2 col-sm-2 col-md-6" style="height: 100%;">
                         <div _ngcontent-c4="" class="left" style="height: 100%;">
-                            <a _ngcontent-c4="" href="/" style="width: 344px; height: 100%; display: flex; align-items: center; overflow: hidden;">
+                            <a _ngcontent-c4="" href="/" class="header-logo-link" style="height: 100%; display: flex; align-items: center; overflow: hidden;">
                                 <img _ngcontent-c4="" alt="logo" src="logo_text.svg" style="width: min(314px, 100%); height: auto; display: block;">
                             </a>
                         </div>
                     </div>
                     <div _ngcontent-c4="" class="col-10 col-sm-10 col-md-6">
-                        <div _ngcontent-c4="" class="ke-khai-nav right" style="padding-top:10px; bottom: 15px !important">
+                        <div _ngcontent-c4="" class="ke-khai-nav right" style="padding-top:0; bottom:auto;">
                             <!---->
                             <!---->
                             <!---->
@@ -6836,39 +7024,39 @@ ul[_ngcontent-c13] {
                 </div>
                 <div _ngcontent-c13="" class="col-md-12 _chuc-nang">
                     <div _ngcontent-c13="" class="container wrapped-thumbnail container-content" style="margin-top: 30px; margin-bottom: 30px; overflow-x: hidden;">
-                        <ul _ngcontent-c13="" style="display: flex !important; flex-direction: row !important; justify-content: center !important; align-items: center !important; list-style: none !important; padding: 0 !important; margin: 0 !important; width: 100% !important; flex-wrap: nowrap !important;">
-                            <li _ngcontent-c13="" style="flex: 1 1 25% !important; max-width: 25% !important; display: flex !important; justify-content: center !important; box-sizing: border-box !important;">
+                        <ul _ngcontent-c13="" class="chuc-nang-list" style="display: flex !important; flex-direction: row !important; justify-content: space-around !important; align-items: center !important; list-style: none !important; padding: 0 !important; margin: 0 !important; width: 100% !important; flex-wrap: wrap !important;">
+                            <li _ngcontent-c13="" class="chuc-nang-item" style="display: flex !important; justify-content: center !important; box-sizing: border-box !important; padding: 8px 4px !important;">
                                 <a _ngcontent-c13="" routerlinkactive="active" href="https://faq.baohiemxahoi.gov.vn/category/question_faq" style="display: flex; align-items: center; gap: 6px; text-decoration: none; color: #1a3c6d;">
-                                    <div style="display: flex; align-items: center; justify-content: center;"><i class="material-icons" style="font-size: 30px; color: #1a3c6d;">settings</i></div>
+                                    <div style="display: flex; align-items: center; justify-content: center;"><i class="material-icons" style="font-size: 28px; color: #1a3c6d;">settings</i></div>
                                     <div style="display: flex; flex-direction: column; font-family: Arial, sans-serif; line-height: 1.2;">
-                                        <span style="font-size: 12px; text-transform: uppercase; white-space: nowrap;">CHỨC NĂNG</span>
-                                        <strong style="font-size: 14px; font-weight: bold; text-transform: uppercase; white-space: nowrap;">FAQ</strong>
+                                        <span style="font-size: 11px; text-transform: uppercase; white-space: nowrap;">CHỨC NĂNG</span>
+                                        <strong style="font-size: 13px; font-weight: bold; text-transform: uppercase; white-space: nowrap;">FAQ</strong>
                                     </div>
                                 </a>
                             </li>
-                            <li _ngcontent-c13="" style="flex: 1 1 25% !important; max-width: 25% !important; display: flex !important; justify-content: center !important; box-sizing: border-box !important;">
+                            <li _ngcontent-c13="" class="chuc-nang-item" style="display: flex !important; justify-content: center !important; box-sizing: border-box !important; padding: 8px 4px !important;">
                                 <a _ngcontent-c13="" routerlinkactive="active" href="https://baohiemxahoi.gov.vn/chuyen-trang-bhxh-bhyt-va-phan-anh-kien-nghi/Pages/default.aspx" style="display: flex; align-items: center; gap: 6px; text-decoration: none; color: #1a3c6d;">
-                                    <div style="display: flex; align-items: center; justify-content: center;"><i class="material-icons" style="font-size: 30px; color: #1a3c6d;">contact_mail</i></div>
+                                    <div style="display: flex; align-items: center; justify-content: center;"><i class="material-icons" style="font-size: 28px; color: #1a3c6d;">contact_mail</i></div>
                                     <div style="display: flex; flex-direction: column; font-family: Arial, sans-serif; line-height: 1.2;">
-                                        <span style="font-size: 12px; text-transform: uppercase; white-space: nowrap;">TIẾP NHẬN</span>
-                                        <strong style="font-size: 14px; font-weight: bold; text-transform: uppercase; white-space: nowrap;">Ý KIẾN GÓP Ý</strong>
+                                        <span style="font-size: 11px; text-transform: uppercase; white-space: nowrap;">TIẾP NHẬN</span>
+                                        <strong style="font-size: 13px; font-weight: bold; text-transform: uppercase; white-space: nowrap;">Ý KIẾN GÓP Ý</strong>
                                     </div>
                                 </a>
                             </li>
-                            <li _ngcontent-c13="" style="flex: 1 1 25% !important; max-width: 25% !important; display: flex !important; justify-content: center !important; box-sizing: border-box !important;">
+                            <li _ngcontent-c13="" class="chuc-nang-item" style="display: flex !important; justify-content: center !important; box-sizing: border-box !important; padding: 8px 4px !important;">
                                 <a _ngcontent-c13="" routerlinkactive="active" href="tel:19009068" style="display: flex; align-items: center; gap: 6px; text-decoration: none; color: #1a3c6d;">
-                                    <div style="display: flex; align-items: center; justify-content: center;"><i class="material-icons" style="font-size: 30px; color: #1a3c6d;">support_agent</i></div>
+                                    <div style="display: flex; align-items: center; justify-content: center;"><i class="material-icons" style="font-size: 28px; color: #1a3c6d;">support_agent</i></div>
                                     <div style="display: flex; flex-direction: column; font-family: Arial, sans-serif; line-height: 1.2;">
-                                        <span style="font-size: 12px; text-transform: uppercase; white-space: nowrap;">TỔNG ĐÀI HỖ TRỢ</span>
-                                        <strong style="font-size: 14px; font-weight: bold; text-transform: uppercase; white-space: nowrap;">1900 90 68</strong>
+                                        <span style="font-size: 11px; text-transform: uppercase; white-space: nowrap;">TỔNG ĐÀI HỖ TRỢ</span>
+                                        <strong style="font-size: 13px; font-weight: bold; text-transform: uppercase; white-space: nowrap;">1900 90 68</strong>
                                     </div>
                                 </a>
                             </li>
-                            <li _ngcontent-c13="" style="flex: 1 1 25% !important; max-width: 25% !important; display: flex !important; justify-content: center !important; box-sizing: border-box !important;">
+                            <li _ngcontent-c13="" class="chuc-nang-item" style="display: flex !important; justify-content: center !important; box-sizing: border-box !important; padding: 8px 4px !important;">
                                 <a _ngcontent-c13="" routerlinkactive="active" href="#/" class="active" style="display: flex; align-items: center; gap: 6px; text-decoration: none; color: #1a3c6d;">
-                                    <div style="display: flex; align-items: center; justify-content: center;"><i class="material-icons" style="font-size: 30px; color: #1a3c6d;">android</i></div>
+                                    <div style="display: flex; align-items: center; justify-content: center;"><i class="material-icons" style="font-size: 28px; color: #1a3c6d;">android</i></div>
                                     <div style="display: flex; flex-direction: column; font-family: Arial, sans-serif; line-height: 1.2;">
-                                        <span style="font-size: 14px; font-weight: normal; text-transform: uppercase; white-space: nowrap;">TRỢ LÝ ẢO</span>
+                                        <span style="font-size: 11px; text-transform: uppercase; white-space: nowrap;">TRỢ LÝ ẢO</span>
                                     </div>
                                 </a>
                             </li>
